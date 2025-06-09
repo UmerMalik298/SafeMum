@@ -1,6 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.5" />
+	
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SafeMum.Application\SafeMum.Application.csproj" />
     <ProjectReference Include="..\SafeMum.Domain\SafeMum.Domain.csproj" />
   </ItemGroup>
