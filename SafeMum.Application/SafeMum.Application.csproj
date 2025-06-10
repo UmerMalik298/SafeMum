@@ -9,6 +9,11 @@
     <ProjectReference Include="..\SafeMum.Domain\SafeMum.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Content\GetContentGroupById\" />
+    <Folder Include="Features\Content\GetContentItemById\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

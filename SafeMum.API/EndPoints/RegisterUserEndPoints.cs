@@ -11,7 +11,7 @@ namespace SafeMum.API.EndPoints
     {
         public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/users");
+            var group = app.MapGroup("/api/users").WithTags("RegisterUser");
 
             group.MapPost("/register", async (RegisterUserRequest request, IMediator mediator) =>
             {

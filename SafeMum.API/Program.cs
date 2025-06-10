@@ -51,7 +51,8 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.MapUserEndpoints();
+app.RegisterUserEndPoints();
+//app.ContentEndPoints();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
