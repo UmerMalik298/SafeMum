@@ -26,11 +26,15 @@ namespace SafeMum.Application.Features.Users.Login
 
                 return new LoginUserResponse
                 {
+                    UserId = result.User.Id,
                     Success = true,
                     Message = "Login successful",
-                   
+
                     Email = result.User.Email,
-                  
+                    Token = result.AccessToken,
+                    RefreshToken = result.RefreshToken,
+                    ExpiresAt = DateTime.UtcNow.AddSeconds(result.ExpiresIn)
+
                 };
             }
             catch (GotrueException ex)
