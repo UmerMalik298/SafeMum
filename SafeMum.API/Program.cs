@@ -2,6 +2,7 @@
 
 using Microsoft.IdentityModel.Tokens;
 using SafeMum.API.EndPoints;
+using SafeMum.Application.Features.Users.ForgotPassword;
 using SafeMum.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure();
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(ForgotPasswordRequest).Assembly));
+
+
+
+
 var jwtKeys = builder.Configuration.GetSection("JwtSettings");
 
 string authority = jwtKeys["Authority"];
