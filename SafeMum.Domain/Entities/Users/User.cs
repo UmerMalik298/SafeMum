@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SafeMum.Domain.Entities.Common;
-
 using Supabase.Postgrest.Attributes;
 
-namespace SafeMum.Domain.Entities
+namespace SafeMum.Domain.Entities.Users
 {
     [Table("users")]
     public class User : BaseEntity

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Interfaces;
-using SafeMum.Domain.Entities;
+using SafeMum.Domain.Entities.Users;
 using Supabase;
 
 namespace SafeMum.Application.Features.Users.CreateUser

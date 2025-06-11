@@ -4,32 +4,65 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
+using Newtonsoft.Json;
+using SafeMum.Application.Common;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.Content;
+using Supabase.Postgrest;
+using Supabase.Postgrest.Exceptions;
 
 namespace SafeMum.Application.Features.Content.CreateContent
 {
-    public class CreateContentHandler : IRequestHandler<CreateContentRequest, CreateContentResponse>
+    public class CreateContentHandler : IRequestHandler<CreateContentRequest, Result>
     {
         private readonly Supabase.Client _client;
 
-        public CreateContentHandler(ISupabaseClientFactory clientFactory)
+        private readonly ITranslationService _translationService;
+
+        public CreateContentHandler(ISupabaseClientFactory clientFactory, ITranslationService translationService)
         {
             _client = clientFactory.GetClient();
-
+            _translationService = translationService;
         }
-        public async Task<CreateContentResponse> Handle(CreateContentRequest request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(CreateContentRequest request, CancellationToken cancellationToken)
         {
 
+            var titleUrdu = _translationService.TranslateToUrduAsync(request.Title);
+            var summryUrdu = _translationService.TranslateToUrduAsync(request.Summary);
+            var textUrdu = _translationService.TranslateToUrduAsync(request.Text);
 
-            var content = new ContentItem
+            await Task.WhenAll(titleUrdu, summryUrdu, textUrdu);
+            var contentItem = new ContentItem
             {
-                Title = request.Title,
-                Summary = request.Summary,
+              Id = Guid.NewGuid(),
+               TitleEn = request.Title,
+               TitleUr = await titleUrdu,
+               SummaryEn = request.Summary,
+               SummaryUr = await summryUrdu,
+               TextEn = request.Text,
+               TextUr = await textUrdu,
+               ImageUrl = request.ImageUrl,
+               Category = request.Category,
+               Audience = request.Audience,
+               Tags = JsonConvert.SerializeObject(request.Tags),
+               CreatedAt = DateTime.UtcNow,
+
+
+
 
             };
-            await _client.From<ContentItem>().Insert(content);
-            throw new NotImplementedException();
+            try
+            {
+                await _client.From<ContentItem>().Insert(contentItem, new QueryOptions { Returning = QueryOptions.ReturnType.Minimal });
+                return Result.Success();
+            }
+            catch (PostgrestException ex)
+            {
+                
+                Console.WriteLine($"Insert failed: {ex.Message}");
+
+                return Result.Failure("Insert failed");
+            }
         }
     }
 }

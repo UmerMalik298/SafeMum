@@ -13,10 +13,6 @@ namespace SafeMum.Application.Features.Content.CreateContentGroup
         public string Title { get; set; }
         public string? Description { get; set; }
 
-        public string? Audience { get; set; }
-        
-        public string? Category { get; set; }
-
-        public string Language { get; set; }
+        public List<Guid> ContentItemIds { get; set; }
     }
 }
