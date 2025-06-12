@@ -22,7 +22,7 @@ namespace SafeMum.Application.Features.Content.DeleteContentItem
         {
 
 
-            var content = await _client.From<ContentItem>().Where(c => c.Id == request.Id).Get();
+            var content = await _client.From<contentitem>().Where(c => c.Id == request.Id).Get();
 
             if (content == null)
             {
