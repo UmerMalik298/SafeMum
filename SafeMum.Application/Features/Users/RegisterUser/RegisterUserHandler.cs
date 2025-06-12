@@ -19,7 +19,7 @@ namespace SafeMum.Application.Features.Users.CreateUser
             RegisterUserRequest request,
             CancellationToken cancellationToken)
         {
-            var alreadyUser = await _client.From<User>().Where(e => e.Email == request.Email).Get();
+            var alreadyUser = await _client.From<User>().Where(e => e.Email == request.Email).Single();
             if(alreadyUser != null)
             {
                 return FailedResponse("Email Already Exists try another Email");
