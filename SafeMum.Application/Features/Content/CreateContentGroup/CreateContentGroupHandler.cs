@@ -8,7 +8,7 @@ using MediatR;
 using SafeMum.Application.Common;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.Content;
-using SafeMum.Domain.Entities.Content.SafeMum.Domain.Entities.Content;
+
 
 namespace SafeMum.Application.Features.Content.CreateContentGroup
 {
@@ -29,22 +29,17 @@ namespace SafeMum.Application.Features.Content.CreateContentGroup
             {
                 Title = request.Title,
                 Description = request.Description,
-                ContentItemIds = request.ContentItemIds.Select(g => g.ToString()).ToList()
+              //  ContentItemIds = request.ContentItemIds.Select(g => g.ToString()).ToList()
 
             };
 
-            try
-            {
+            
                 await _client.From<ContentGroup>().Insert(contentGroup);
 
 
 
                 return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure("Fail to Insert");
-            }
+            
         }
     }
 }

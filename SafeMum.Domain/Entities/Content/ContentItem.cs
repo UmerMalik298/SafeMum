@@ -1,40 +1,45 @@
 ﻿using SafeMum.Domain.Entities.Common;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SafeMum.Domain.Entities.Content
 {
-    [Table("content_items")]
-    public class ContentItem : BaseEntity
+    [System.ComponentModel.DataAnnotations.Schema.Table("content_items")]
+    public class ContentItem : BaseModel
     {
-        [Column("title_en")]
+        [PrimaryKey("id", false)]
+        public Guid Id { get; set; } 
+
+        [System.ComponentModel.DataAnnotations.Schema.Column("title_en")]
         public string TitleEn { get; set; }
 
-        [Column("title_ur")]
+        [System.ComponentModel.DataAnnotations.Schema.Column("title_ur")]
         public string TitleUr { get; set; }
 
-        [Column("summary_en")]
-        public string? SummaryEn { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("summary_en")]
+        public string SummaryEn { get; set; }
 
-        [Column("summary_ur")]
-        public string? SummaryUr { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("summary_ur")]
+        public string SummaryUr { get; set; }
 
-        [Column("text_en")]
+        [System.ComponentModel.DataAnnotations.Schema.Column("text_en")]
         public string TextEn { get; set; }
 
-        [Column("text_ur")]
+        [System.ComponentModel.DataAnnotations.Schema.Column("text_ur")]
         public string TextUr { get; set; }
 
-        [Column("image_url")]
-        public string? ImageUrl { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("image_url")]
+        public string ImageUrl { get; set; }
 
-        [Column("category")]
-        public string? Category { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("category")]
+        public string Category { get; set; }
 
-        [Column("audience")]
-        public string? Audience { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("audience")]
+        public string Audience { get; set; }
 
-        [Column("tags")]
-        public string? Tags { get; set; } // JSON string or list
+        [System.ComponentModel.DataAnnotations.Schema.Column("tags")]
+        public List<string> Tags { get; set; } // JSON string or list
     }
 
 }

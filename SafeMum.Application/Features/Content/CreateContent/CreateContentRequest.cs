@@ -12,14 +12,14 @@ namespace SafeMum.Application.Features.Content.CreateContent
     {
      
         public string Title { get; set; }
-        public string? Summary { get; set; }
+        public string Summary { get; set; }
         public string Text { get; set; }
-        public string? ImageUrl { get; set; }
+        public string ImageUrl { get; set; }
 
 
-        public string? Category { get; set; }
-        public string? Audience { get; set; }
-        public List<string>? Tags { get; set; }
+        public string Category { get; set; }
+        public string Audience { get; set; }
+        public List<string> Tags { get; set; }
     }
     
 

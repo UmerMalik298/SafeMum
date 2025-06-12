@@ -44,25 +44,21 @@ namespace SafeMum.Application.Features.Content.CreateContent
                ImageUrl = request.ImageUrl,
                Category = request.Category,
                Audience = request.Audience,
-               Tags = JsonConvert.SerializeObject(request.Tags),
-               CreatedAt = DateTime.UtcNow,
+              Tags =  request.Tags
+               //Tags = JsonConvert.SerializeObject(request.Tags),
+               //CreatedAt = DateTime.UtcNow,
 
 
 
 
             };
-            try
-            {
-                await _client.From<ContentItem>().Insert(contentItem, new QueryOptions { Returning = QueryOptions.ReturnType.Minimal });
+           
+                await _client.From<ContentItem>().Insert(contentItem);
                 return Result.Success();
-            }
-            catch (PostgrestException ex)
-            {
+            
+           
                 
-                Console.WriteLine($"Insert failed: {ex.Message}");
-
-                return Result.Failure("Insert failed");
-            }
+              
         }
     }
 }

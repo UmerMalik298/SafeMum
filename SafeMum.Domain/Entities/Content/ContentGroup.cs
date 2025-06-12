@@ -7,25 +7,28 @@ using SafeMum.Domain.Entities.Common;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
 namespace SafeMum.Domain.Entities.Content
  {
-        [Table("content_groups")]
-        public class ContentGroup : BaseModel
+    [System.ComponentModel.DataAnnotations.Schema.Table("content_groups")]
+    public class ContentGroup : BaseModel
         {
-            
-            
 
 
-            [Column("title")]
+        [PrimaryKey("id", false)]
+        public Guid Id { get; set; }
+
+
+        [Supabase.Postgrest.Attributes.Column("title")]
             public string Title { get; set; }
 
-            [Column("description")]
+            [Supabase.Postgrest.Attributes.Column("description")]
             public string? Description { get; set; }
 
-            [Column("content_item_ids")]
+            //[Supabase.Postgrest.Attributes.Column("content_item_ids")]
  
-            public List<string> ContentItemIds { get; set; } = new();
+            //public List<string> ContentItemIds { get; set; } = new();
         }
     }
 
