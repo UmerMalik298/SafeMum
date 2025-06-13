@@ -2,6 +2,7 @@
 
 using SafeMum.Application.Features.Content.CreateContentGroup;
 using SafeMum.Application.Features.Content.CreateContentItem;
+using SafeMum.Application.Features.Content.GetAllContentItem;
 using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Features.Users.Login;
 
@@ -26,9 +27,13 @@ namespace SafeMum.API.EndPoints
                 var result = await mediator.Send(request);
                 return Results.Ok(result);
             });
-          
 
 
+            group.MapPost("/get-all-content-item", async (GetAllContentItemRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
 
 
             return app;

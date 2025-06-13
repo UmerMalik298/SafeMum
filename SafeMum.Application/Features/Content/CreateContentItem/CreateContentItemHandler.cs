@@ -28,7 +28,7 @@ namespace SafeMum.Application.Features.Content.CreateContentItem
             {
                 await _client.InitializeAsync();
 
-                // Translate only from the provided English inputs
+        
                 var titleUr = await _translationService.TranslateToUrduAsync(request.TitleEn);
                 var summaryUr = await _translationService.TranslateToUrduAsync(request.SummaryEn);
                 var textUr = await _translationService.TranslateToUrduAsync(request.TextEn);
