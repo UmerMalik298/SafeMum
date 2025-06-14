@@ -1,6 +1,7 @@
-
+﻿
 
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SafeMum.API.EndPoints;
 using SafeMum.Application.Features.Users.ForgotPassword;
@@ -26,7 +27,7 @@ var jwtKeys = builder.Configuration.GetSection("JwtSettings");
 string authority = jwtKeys["Authority"];
 string issuer = jwtKeys["Issuer"];
 string secretKey = jwtKeys["secretKey"];
-builder.Services.AddAuthentication("Bearer")
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer("Bearer", options =>
     {
         options.Authority = authority;
@@ -34,13 +35,13 @@ builder.Services.AddAuthentication("Bearer")
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = issuer,
+            ValidIssuer = "https://qpmlnlojjsdnqohhhyth.supabase.co/auth/v1",
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             //  IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(secretKey))
-    //        IssuerSigningKey = new SymmetricSecurityKey(
-    //Encoding.UTF8.GetBytes("vQWXjdI1QHTzkq4D7h8Aagr43eqfT+1qux61soC4j6csCEIyVgZ/b3uhllsZ18W3NX5fESWxmY9FIuCyuFD5NA=="))
+           IssuerSigningKey = new SymmetricSecurityKey(
+    Encoding.UTF8.GetBytes("vQWXjdI1QHTzkq4D7h8Aagr43eqfT+1qux61soC4j6csCEIyVgZ/b3uhllsZ18W3NX5fESWxmY9FIuCyuFD5NA=="))
 
 
 

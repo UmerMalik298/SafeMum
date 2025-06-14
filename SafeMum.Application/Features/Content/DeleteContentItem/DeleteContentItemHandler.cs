@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
+using SafeMum.Application.Common;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.Content;
 
 namespace SafeMum.Application.Features.Content.DeleteContentItem
 {
-    public class DeleteContentItemHandler : IRequestHandler<DeleteContentItemRequest>
+    public class DeleteContentItemHandler : IRequestHandler<DeleteContentItemRequest, Result>
     {
         private readonly Supabase.Client _client;
 
@@ -18,7 +19,7 @@ namespace SafeMum.Application.Features.Content.DeleteContentItem
             _client = supabaseClient.GetClient();
 
         }
-        public async Task Handle(DeleteContentItemRequest request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DeleteContentItemRequest request, CancellationToken cancellationToken)
         {
 
 
@@ -27,8 +28,8 @@ namespace SafeMum.Application.Features.Content.DeleteContentItem
             if (content == null)
             {
                 throw new Exception();
-            }
-         //   _client.From<ContentItem>().Delete(content);
+            } 
+          //_client.From<contentitem>().Delete(content);
             throw new NotImplementedException();
         }
     }
