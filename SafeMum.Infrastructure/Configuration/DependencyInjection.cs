@@ -21,6 +21,8 @@ namespace SafeMum.Infrastructure.Configuration
             service.AddScoped<ISupabaseClientFactory, SupabaseClientFactory>();
 
             service.AddHttpClient<ITranslationService, TranslationService>();
+
+            service.AddScoped<IImageUploadService, ImageUploadService>();
   
             service.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterUserRequest).Assembly));

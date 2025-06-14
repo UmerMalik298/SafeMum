@@ -14,11 +14,12 @@ namespace SafeMum.Application.Features.Content.CreateContentItem
     {
         private readonly Supabase.Client _client;
         private readonly ITranslationService _translationService;
-        public CreateContentItemHandler(ISupabaseClientFactory clientFactory, ITranslationService translationService)
+        private readonly IImageUploadService _uploadService;
+        public CreateContentItemHandler(ISupabaseClientFactory clientFactory, ITranslationService translationService, IImageUploadService uploadService)
         {
             _client = clientFactory.GetClient();
             _translationService = translationService;
-
+            _uploadService = uploadService;
         }
 
 
@@ -42,7 +43,7 @@ namespace SafeMum.Application.Features.Content.CreateContentItem
                     summary_ur = summaryUr,
                     text_en = request.TextEn,
                     text_ur = textUr,
-                    image_url = request.ImageUrl,
+                    image_url = await _uploadService.UploadImageAsync(request.Image),
                     category = request.Category,
                     audience = request.Audience,
                     tags = request.Tags ?? new List<string>()

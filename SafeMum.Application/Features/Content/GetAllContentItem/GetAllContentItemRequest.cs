@@ -9,8 +9,11 @@ namespace SafeMum.Application.Features.Content.GetAllContentItem
 {
     public class GetAllContentItemRequest : IRequest<List<GetAllContentItemResponse>>
     {
-        public string Language { get; set; } = "en";
-    }
+        public string? Category { get; set; }
+        public string? Audience { get; set; }
+
+        public string? Language { get; set; } = "en";
+    };
 
 
     public class GetAllContentItemResponse
@@ -26,6 +29,9 @@ namespace SafeMum.Application.Features.Content.GetAllContentItem
         public string Category { get; set; }
 
         public string Audience { get; set; }
+
+
+        public string Summary { get; set; }
 
         public List<string> Tags { get; set; }
 

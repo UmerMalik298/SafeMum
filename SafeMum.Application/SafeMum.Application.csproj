@@ -2,17 +2,15 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="12.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
 	  <PackageReference Include="supabase" Version="1.1.1" />
+	  <PackageReference Include="Supabase.Postgrest" Version="4.1.0" />
+	  <PackageReference Include="Supabase.Realtime" Version="7.0.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SafeMum.Domain\SafeMum.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\Content\GetContentGroupById\" />
-    <Folder Include="Features\Content\GetContentItemById\" />
   </ItemGroup>
 
   <PropertyGroup>
