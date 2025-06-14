@@ -20,7 +20,7 @@ namespace SafeMum.Application.Features.Content.GetContentItemById
         }
         public async Task<GetContentItemByIdResponse> Handle(GetContentItemByIdRequest request, CancellationToken cancellationToken)
         {
-            await _client.InitializeAsync();
+         //   await _client.InitializeAsync();
 
             var item = await _client.From<contentitem>().Where(x => x.Id == request.Id).Single();
 

@@ -23,14 +23,14 @@ namespace SafeMum.Application.Features.Content.DeleteContentItem
         {
 
 
-            var content = await _client.From<contentitem>().Where(c => c.Id == request.Id).Get();
+            var content = await _client.From<contentitem>().Where(c => c.Id == request.Id).Single();
 
             if (content == null)
             {
                 throw new Exception();
             } 
-          //_client.From<contentitem>().Delete(content);
-            throw new NotImplementedException();
+           await  _client.From<contentitem>().Delete(content);
+            return Result.Success();
         }
     }
 }

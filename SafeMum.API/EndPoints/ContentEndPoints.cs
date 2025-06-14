@@ -2,6 +2,7 @@
 
 using SafeMum.Application.Features.Content.CreateContentGroup;
 using SafeMum.Application.Features.Content.CreateContentItem;
+using SafeMum.Application.Features.Content.DeleteContentItem;
 using SafeMum.Application.Features.Content.GetAllContentGroup;
 using SafeMum.Application.Features.Content.GetAllContentItem;
 using SafeMum.Application.Features.Content.GetContentItemById;
@@ -22,7 +23,11 @@ namespace SafeMum.API.EndPoints
                 var result = await mediator.Send(request);
                 return Results.Ok(result);
             });
-
+            group.MapDelete("/delete-content-item", async ([AsParameters] DeleteContentItemRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
 
             //group.MapPost("/create-content-item", async ([AsParameters] CreateContentItemRequest request, IMediator mediator) =>
             //{
@@ -72,7 +77,7 @@ namespace SafeMum.API.EndPoints
                 return Results.Ok(result);
             });
 
-            group.MapGet("/content-item/{id}", async (Guid id, IMediator mediator) =>
+            group.MapGet("/content-item/{id}", async ([AsParameters] Guid id, IMediator mediator) =>
             {
                 var result = await mediator.Send(new GetContentItemByIdRequest { Id = id });
                 return Results.Ok(result);
