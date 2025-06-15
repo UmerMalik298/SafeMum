@@ -2,6 +2,7 @@
 
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using SafeMum.API.EndPoints;
 using SafeMum.Application.Features.Users.ForgotPassword;
@@ -73,7 +74,28 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedProto
+    });
+
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Headers["X-Forwarded-Proto"] != "https")
+        {
+            var withHttps = "https://" + context.Request.Host + context.Request.Path + context.Request.QueryString;
+            context.Response.Redirect(withHttps);
+        }
+        else
+        {
+            await next();
+        }
+    });
+}
+
 app.UseAuthentication(); 
 app.UseAuthorization();
 app.MapUserEndpoints();
