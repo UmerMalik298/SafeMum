@@ -8,6 +8,13 @@ using SafeMum.Application.Features.Users.ForgotPassword;
 using SafeMum.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(int.Parse(port));
+});
+
 var services = new ServiceCollection();
 services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
@@ -53,8 +60,15 @@ builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
+app.UseSwagger();
+app.UseSwaggerUI();
 
-   
+// Only enable HTTPS redirection if running locally (not in Docker)
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
