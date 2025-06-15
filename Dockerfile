@@ -29,11 +29,11 @@ RUN dotnet build "SafeMum.API.csproj" -c Release -o /app/build
 # Publish stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "SafeMum.API.csproj" -c Release -o /app/publish
+RUN dotnet publish "SafeMum.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Final stage for production
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "SafeMum.API.dll"]
-CMD ASPNETCORE_URLS=http://*:$PORT dotnet API.dll
+CMD ASPNETCORE_URLS=http://*:$PORT dotnet SafeMum.API.dll
