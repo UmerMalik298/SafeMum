@@ -16,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{57441E2B-0590-430C-A933-A3BBDBA27B2A}"
 	ProjectSection(SolutionItems) = preProject
 		Dockerfile = Dockerfile
+		heroku.yml = heroku.yml
 	EndProjectSection
 EndProject
 Global
