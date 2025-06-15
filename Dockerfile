@@ -1,11 +1,15 @@
 # Base stage for runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+USER app
 WORKDIR /app
-ENV DOTNET_RUNNING_IN_CONTAINER=true
+EXPOSE 8080
+EXPOSE 8081
+#ENV DOTNET_RUNNING_IN_CONTAINER=true
 # Note: PORT environment variable will be provided by Heroku at runtime
 
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Copy project files first for better layer caching
@@ -24,10 +28,12 @@ RUN dotnet build "SafeMum.API.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "SafeMum.API.csproj" -c Release -o /app/publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Final stage for production
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "SafeMum.API.dll"]
+CMD ASPNETCORE_URLS=http://*:$PORT dotnet API.dll
