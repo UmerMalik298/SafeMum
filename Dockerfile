@@ -2,9 +2,10 @@
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 #USER $APP_UID
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
+#EXPOSE 8080
+#EXPOSE 8081
+ENV ASPNETCORE_URLS=http://+:$PORT 
+ENV DOTNET_RUNNING_IN_CONTAINER=true
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
@@ -28,7 +29,7 @@ RUN dotnet publish "./SafeMum.API.csproj" -c $BUILD_CONFIGURATION -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENV ASPNETCORE_URLS=http://+:$PORT
+#ENV ASPNETCORE_URLS=http://+:$PORT
 CMD ["dotnet", "SafeMum.API.dll"]
 
 #ENTRYPOINT ["dotnet", "SafeMum.API.dll"]
