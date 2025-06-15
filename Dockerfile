@@ -5,7 +5,7 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 #ENV DOTNET_RUNNING_IN_CONTAINER=true
-# Note: PORT environment variable will be provided by Heroku at runtime
+
 
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
@@ -29,7 +29,7 @@ RUN dotnet build "SafeMum.API.csproj" -c Release -o /app/build
 # Publish stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "SafeMum.API.csproj" -c Release -o /app/publish
 
 # Final stage for production
 FROM base AS final
