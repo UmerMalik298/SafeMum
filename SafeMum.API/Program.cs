@@ -65,7 +65,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 // Only enable HTTPS redirection if running locally (not in Docker)
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
