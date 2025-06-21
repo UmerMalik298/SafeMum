@@ -8,7 +8,7 @@ using Supabase.Postgrest.Models;
 
 namespace SafeMum.Domain.Entities.Content
 {
-    [Table("contentitem")]
+    [Table("content_items")]
     public class contentitem : BaseModel
     {
 

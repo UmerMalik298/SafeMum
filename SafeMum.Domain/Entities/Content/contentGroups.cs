@@ -9,7 +9,7 @@ using Supabase.Postgrest.Models;
 namespace SafeMum.Domain.Entities.Content
 {
    
-        [Table("contentGroups")]
+        [Table("contentgroups")]
         public class contentGroups : BaseModel
         {
             [PrimaryKey("id", false)]

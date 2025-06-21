@@ -4,6 +4,7 @@ using SafeMum.Application.Features.Content.CreateContentGroup;
 using SafeMum.Application.Features.Content.CreateContentItem;
 using SafeMum.Application.Features.Content.DeleteContentItem;
 using SafeMum.Application.Features.Content.GetAllContentGroup;
+using SafeMum.Application.Features.Content.GetAllContentGroupItems;
 using SafeMum.Application.Features.Content.GetAllContentItem;
 using SafeMum.Application.Features.Content.GetContentItemById;
 using SafeMum.Application.Features.Users.CreateUser;
@@ -70,6 +71,13 @@ namespace SafeMum.API.EndPoints
                 return Results.Ok(result);
             });
 
+
+
+            group.MapGet("/get-all-content-group-items", async ([AsParameters] GetAllContentGroupItemsRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
 
             group.MapGet("/get-all-content-group", async ([AsParameters] GetAllContentGroupRequest request, IMediator mediator) =>
             {
