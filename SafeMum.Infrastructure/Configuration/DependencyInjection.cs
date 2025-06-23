@@ -9,6 +9,8 @@ using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Interfaces;
 using SafeMum.Infrastructure.Services;
 
+using Microsoft.AspNetCore.Http;
+
 
 
 
@@ -18,12 +20,15 @@ namespace SafeMum.Infrastructure.Configuration
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection service)
         {
+           // service.AddHttpContextAccessor();
             service.AddScoped<ISupabaseClientFactory, SupabaseClientFactory>();
 
             service.AddHttpClient<ITranslationService, TranslationService>();
 
             service.AddScoped<IImageUploadService, ImageUploadService>();
-  
+            service.AddScoped<IPregnancyTrackerService, PregnancyTrackerService>();
+
+
             service.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterUserRequest).Assembly));
 

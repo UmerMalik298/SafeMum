@@ -8,6 +8,8 @@ using SafeMum.Infrastructure.Configuration;
 
 
 using Microsoft.OpenApi.Models;
+using SafeMum.Application.Common.Exceptions;
+using System.Text.Json;
 
 
 
@@ -40,7 +42,7 @@ string authority = jwtKeys["Authority"];
 string issuer = jwtKeys["Issuer"];
 string secretKey = jwtKeys["secretKey"];
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
         options.Authority = authority;
@@ -56,6 +58,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -107,9 +110,36 @@ app.UseDefaultFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next.Invoke();
+    }
+    catch (AppException ex)
+    {
+        context.Response.StatusCode = ex.StatusCode;
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new { error = ex.Message });
+        await context.Response.WriteAsync(result);
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new { error = "An unexpected error occurred.", detail = ex.Message });
+        await context.Response.WriteAsync(result);
+    }
+});
+
+
+
 // Your custom endpoint maps
 app.MapUserEndpoints();
 app.MapContentEndPoints();
+app.MapPregnancyTrackerEndPoints();
+app.MapUserPregnancyInformationEndPoints();
 
 app.Run();
 

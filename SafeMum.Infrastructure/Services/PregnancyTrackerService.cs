@@ -11,15 +11,24 @@ namespace SafeMum.Infrastructure.Services
     {
         public int CalculateWeekFromEDD(DateTime edd)
         {
-            var today = DateTime.UtcNow.Date;
-            int week = 40 - (int)((edd - today).TotalDays / 7);
-            return Math.Clamp(week, 1, 40);
+            var weeksRemaining = (edd - DateTime.UtcNow.Date).TotalDays / 7;
+            var currentWeek = 40 - (int)weeksRemaining;
+            return Math.Clamp(currentWeek, 1, 40);
         }
+
+
 
         public int CalculateWeekFromLMP(DateTime lmp)
         {
-            var today = DateTime.UtcNow.Date;
-            int week = (int)((today - lmp).TotalDays / 7) + 1;
+            if (lmp > DateTime.UtcNow.Date)
+            {
+                throw new ArgumentException("LMP cannot be in the future");
+            }
+
+            var totalDays = (DateTime.UtcNow.Date - lmp).TotalDays;
+            if (totalDays < 0) return 1;
+
+            var week = (int)(totalDays / 7) + 1;
             return Math.Clamp(week, 1, 40);
         }
     }
