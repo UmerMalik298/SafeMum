@@ -21,7 +21,7 @@ namespace SafeMum.Domain.Entities.PregnancyInformation
         public string UserId { get; set; }
 
         [Supabase.Postgrest.Attributes.Column("iscurrentlypregnant")]
-        public bool IsCurrentlyPregnant { get; set; } = true;
+        public bool? IsCurrentlyPregnant { get; set; } = true;
 
 
         [Supabase.Postgrest.Attributes.Column("lmp")]
@@ -58,6 +58,37 @@ namespace SafeMum.Domain.Entities.PregnancyInformation
 
         [Supabase.Postgrest.Attributes.Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+
+        [Supabase.Postgrest.Attributes.Column("isdiabetic")]
+        public bool? IsDiabetic { get; set; }
+
+
+
+        [Supabase.Postgrest.Attributes.Column("hashypertension")]
+        public bool? HasHypertension { get; set; }
+
+
+
+        [Supabase.Postgrest.Attributes.Column("haemoglobinlevel")]
+        public float? HaemoglobinLevel { get; set; }
+
+
+
+        [Supabase.Postgrest.Attributes.Column("issmoker")]
+        public bool? IsSmoker { get; set; }
+
+
+        [Supabase.Postgrest.Attributes.Column("takesmedication")]
+        public List<string>? TakesMedication { get; set; }
+
+
+
+        [Supabase.Postgrest.Attributes.Column("bloodgroup")]
+        public string? BloodGroup { get; set; }
+
+
+
     }
 
 }

@@ -10,15 +10,29 @@ namespace SafeMum.Application.Features.UserPregnancyInformation
 {
     public class UserPregnancyInformationRequest : IRequest<Result>
     {
-        public bool CurrentPregnant { get; set; }
+        public bool? CurrentlyPregnant { get; set; }
         public DateOnly? EDD { get; set; }
 
-        public int NoOfPreviousPregnancies { get; set; }
+        public int? NoOfPreviousPregnancies { get; set; }
 
-        public int NoOfLiveBirths { get; set; }
+        public int? NoOfLiveBirths { get; set; }
 
-        public string EmergencyContactName { get; set; }
+        public string? EmergencyContactName { get; set; }
 
-        public string EmergencyContactNumber { get; set; }
+        public string? EmergencyContactNumber { get; set; }
+
+
+
+        public bool? IsDiabetic { get; set; }
+
+        public bool? HasHypertension { get; set; }
+
+        public float? HaemoglobinLevel { get; set; }
+
+        public bool? IsSmoker { get; set; }
+
+        public List<string>? TakesMedication { get; set; }
+
+        public string? BloodGroup { get; set; }
     }
 }

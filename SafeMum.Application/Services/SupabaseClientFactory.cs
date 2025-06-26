@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SafeMum.Application.Interfaces;
-using SafeMum.Infrastructure.Configuration;
+
 using Supabase;
 using Supabase.Gotrue;
 

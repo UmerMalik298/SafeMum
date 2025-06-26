@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using SafeMum.Application.Common;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.PregnancyInformation;
+using SafeMum.Domain.Entities.Users;
 
 namespace SafeMum.Application.Features.UserPregnancyInformation
 {
@@ -32,13 +34,14 @@ namespace SafeMum.Application.Features.UserPregnancyInformation
                 if (string.IsNullOrWhiteSpace(userId))
                     return Result.Failure("User is Not Authenticated");
 
+
                 var userPregnancyInfo = new UserPregnancyInfo
                 {
 
                     Id = Guid.NewGuid(),
 
                     UserId = userId ,
-                    IsCurrentlyPregnant = request.CurrentPregnant,
+                    IsCurrentlyPregnant = request.CurrentlyPregnant,
                     EDD = request.EDD.HasValue
                         ? request.EDD.Value.ToDateTime(TimeOnly.MinValue)
                         : null,
@@ -46,7 +49,13 @@ namespace SafeMum.Application.Features.UserPregnancyInformation
                     Parity = request.NoOfLiveBirths,
                     EmergencyContactName = request.EmergencyContactName,
                     EmergencyContactNumber = request.EmergencyContactNumber,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IsDiabetic = request.IsDiabetic,
+                    IsSmoker = request.IsSmoker,
+                    HasHypertension = request.HasHypertension,
+                    BloodGroup = request.BloodGroup,
+                    TakesMedication = request.TakesMedication ?? new List<string>(),
+
                    
                 };
 
