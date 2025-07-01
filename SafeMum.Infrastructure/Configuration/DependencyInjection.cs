@@ -10,6 +10,7 @@ using SafeMum.Application.Interfaces;
 using SafeMum.Infrastructure.Services;
 
 using Microsoft.AspNetCore.Http;
+using SafeMum.Application.Repositories;
 
 
 
@@ -27,7 +28,7 @@ namespace SafeMum.Infrastructure.Configuration
 
             service.AddScoped<IImageUploadService, ImageUploadService>();
             service.AddScoped<IPregnancyTrackerService, PregnancyTrackerService>();
-
+            service.AddScoped<IMessageRepository, MessageRepository>();
 
             service.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterUserRequest).Assembly));
