@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Chat Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+</head>
+<body>
+    <h1>SignalR Test</h1>
+    <input type="text" id="messageInput" placeholder="Enter message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <ul id="messages"></ul>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub?userId=00000000-0000-0000-0000-000000000001") // Replace with actual userId
+            .build();
+
+        connection.on("ReceiveMessage", function (senderId, message) {
+            const li = document.createElement("li");
+            li.textContent = `${senderId}: ${message}`;
+            document.getElementById("messages").appendChild(li);
+        });
+
+        connection.start().then(function () {
+            console.log("Connected to SignalR Hub");
+        });
+
+        function sendMessage() {
+            const message = document.getElementById("messageInput").value;
+            connection.invoke("SendMessage", "00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002", message);
+        }
+    </script>
+</body>
+</html>

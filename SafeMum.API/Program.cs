@@ -10,6 +10,7 @@ using SafeMum.Infrastructure.Configuration;
 using Microsoft.OpenApi.Models;
 using SafeMum.Application.Common.Exceptions;
 using System.Text.Json;
+using SafeMum.Application.Hubs;
 
 
 
@@ -36,6 +37,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(ForgotPasswordRequest).Assembly);
 });
 
+builder.Services.AddSignalR();
 // JWT Auth setup
 var jwtKeys = builder.Configuration.GetSection("JwtSettings");
 string authority = jwtKeys["Authority"];
@@ -94,7 +96,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "SafeMum API V1");
-    c.RoutePrefix = "swagger"; // So Swagger is at /swagger
+    c.RoutePrefix = "swagger"; 
 });
 
 // Routing
@@ -103,7 +105,7 @@ app.MapGet("/", () => Results.Json(new
     status = "Healthy",
     timestamp = DateTime.UtcNow
 }));
-
+app.MapHub<ChatHub>("/chatHub");
 app.UseStaticFiles();
 app.UseDefaultFiles();
 
@@ -140,6 +142,7 @@ app.MapUserEndpoints();
 app.MapContentEndPoints();
 app.MapPregnancyTrackerEndPoints();
 app.MapUserPregnancyInformationEndPoints();
+app.MapCommunicationEndPoints();
 
 app.Run();
 
