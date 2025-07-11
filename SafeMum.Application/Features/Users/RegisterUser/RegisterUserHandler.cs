@@ -19,39 +19,42 @@ namespace SafeMum.Application.Features.Users.CreateUser
             RegisterUserRequest request,
             CancellationToken cancellationToken)
         {
-            var alreadyUser = await _client.From<User>().Where(e => e.Email == request.Email).Single();
-            if(alreadyUser != null)
+            // 1. Check if email exists in auth system
+            var authUser = await _client.Auth.SignIn(request.Email);
+            if (authUser?.User?.Id != null)
             {
-                return FailedResponse("Email Already Exists try another Email");
+                return FailedResponse("Email already registered");
             }
-           
+
+            // 2. Create auth user
             var authResponse = await _client.Auth.SignUp(request.Email, request.Password);
 
             if (authResponse?.User?.Id == null)
                 return FailedResponse("Authentication failed");
 
-        
+            // 3. Create public user with SAME ID
             var user = new User
             {
-                Id = Guid.Parse(authResponse.User.Id),
+                Id = Guid.Parse(authResponse.User.Id), // Critical: Same ID
                 Email = request.Email,
                 Username = request.Username,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 CreatedAt = DateTime.UtcNow,
-                Role = "User"
+                Role = "User",
+                UserType = request.UserType // Set user type
             };
 
             await _client.From<User>().Insert(user);
 
-          
             return new RegisterUserResponse
             {
                 Success = true,
                 UserId = authResponse.User.Id,
                 Email = user.Email,
                 Username = user.Username,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                UserType = user.UserType // Return user type
             };
         }
 

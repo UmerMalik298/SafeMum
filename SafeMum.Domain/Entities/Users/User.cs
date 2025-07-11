@@ -31,5 +31,9 @@ namespace SafeMum.Domain.Entities.Users
 
         [Column("last_login_at")]
         public DateTime? LastLoginAt { get; set; }
+
+
+        [Column("user_type")]
+        public string UserType { get; set; }
     }
 }

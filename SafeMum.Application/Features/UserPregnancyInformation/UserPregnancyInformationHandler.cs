@@ -29,11 +29,11 @@ namespace SafeMum.Application.Features.UserPregnancyInformation
             try
             {
                 var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                
+                var userId2 = _httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value;
 
                 if (string.IsNullOrWhiteSpace(userId))
                     return Result.Failure("User is Not Authenticated");
-
+                
 
                 var userPregnancyInfo = new UserPregnancyInfo
                 {
