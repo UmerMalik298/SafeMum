@@ -40,6 +40,8 @@ namespace SafeMum.Application.Features.Users.CreateUser
         [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
         public string LastName { get; set; }
 
+        public string? UserType { get; set; } = "Visitor";
+
 
     }
 
@@ -51,6 +53,8 @@ namespace SafeMum.Application.Features.Users.CreateUser
         public string Username { get; set; }
         public DateTime CreatedAt { get; set; }
         public string ErrorMessage { get; set; }
+
+        public string UserType { get; set; }
         public Dictionary<string, string> ValidationErrors { get; set; } = new();
 
     }

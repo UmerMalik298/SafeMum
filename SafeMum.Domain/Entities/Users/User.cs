@@ -11,6 +11,10 @@ namespace SafeMum.Domain.Entities.Users
     [Table("users")]
     public class User : BaseEntity
     {
+
+        [Column("id")]
+        public Guid Id { get; set; }
+
         [Column("email")]
         public string Email { get; set; } = null!;
 
@@ -26,10 +30,14 @@ namespace SafeMum.Domain.Entities.Users
         [Column("role")]
         public string Role { get; set; } = "User";
 
-        [Column("is_email_verified")]
-        public bool IsEmailVerified { get; set; } = false;
+        //[Column("is_email_verified")]
+        //public bool IsEmailVerified { get; set; } = false;
 
-        [Column("last_login_at")]
-        public DateTime? LastLoginAt { get; set; }
+        //[Column("last_login_at")]
+        //public DateTime? LastLoginAt { get; set; }
+
+
+        [Column("user_type")]
+        public string UserType { get; set; }
     }
 }
