@@ -19,50 +19,53 @@ namespace SafeMum.Application.Features.Users.CreateUser
             RegisterUserRequest request,
             CancellationToken cancellationToken)
         {
-            // 1. Check if email exists in auth system
-            var authUser = await _client.Auth.SignIn(request.Email);
-            if (authUser?.User?.Id != null)
+            try
             {
-                return FailedResponse("Email already registered");
+                // 1. Create auth user
+                var authResponse = await _client.Auth.SignUp(request.Email, request.Password);
+
+                if (authResponse?.User?.Id == null)
+                    return FailedResponse("Authentication failed");
+
+                // 2. Create public user
+                var user = new User
+                {
+                    Id = Guid.Parse(authResponse.User.Id),
+                    Email = request.Email,
+                    Username = request.Username,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    CreatedAt = DateTime.UtcNow,
+                    Role = "User",
+                    UserType = request.UserType
+                };
+
+                await _client.From<User>().Insert(user);
+
+                return new RegisterUserResponse
+                {
+                    Success = true,
+                    UserId = authResponse.User.Id,
+                    Email = user.Email,
+                    Username = user.Username,
+                    CreatedAt = user.CreatedAt,
+                    UserType = user.UserType
+                };
             }
-
-            // 2. Create auth user
-            var authResponse = await _client.Auth.SignUp(request.Email, request.Password);
-
-            if (authResponse?.User?.Id == null)
-                return FailedResponse("Authentication failed");
-
-            // 3. Create public user with SAME ID
-            var user = new User
+            catch (Exception ex)
             {
-                Id = Guid.Parse(authResponse.User.Id), // Critical: Same ID
-                Email = request.Email,
-                Username = request.Username,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                CreatedAt = DateTime.UtcNow,
-                Role = "User",
-                UserType = request.UserType // Set user type
-            };
+               
+                if (ex.Message.Contains("already registered") || ex.Message.Contains("already in use"))
+                    return FailedResponse("Email already registered");
 
-            await _client.From<User>().Insert(user);
-
-            return new RegisterUserResponse
-            {
-                Success = true,
-                UserId = authResponse.User.Id,
-                Email = user.Email,
-                Username = user.Username,
-                CreatedAt = user.CreatedAt,
-                UserType = user.UserType // Return user type
-            };
+                return FailedResponse($"Registration failed: {ex.Message}");
+            }
         }
 
-        private RegisterUserResponse FailedResponse(string message) =>
-            new RegisterUserResponse
-            {
-                Success = false,
-                ErrorMessage = message
-            };
+        private RegisterUserResponse FailedResponse(string message) => new()
+        {
+            Success = false,
+            ErrorMessage = message
+        };
     }
 }
