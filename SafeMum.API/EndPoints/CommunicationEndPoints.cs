@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using SafeMum.Application.Features.Communication.GetAllConversation;
 using SafeMum.Application.Features.Communication.GetAllMessages;
 using SafeMum.Application.Features.Communication.GetAllUsers;
 using SafeMum.Application.Features.Communication.GetMessagesByUser;
@@ -41,6 +42,11 @@ namespace SafeMum.API.EndPoints
 
 
             group.MapGet("/get-user-by-id", async ([AsParameters] GetUserByIdRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
+            group.MapGet("/get-conversation-by-userid", async ([AsParameters] GetAllConversationRequest request, IMediator mediator) =>
             {
                 var result = await mediator.Send(request);
                 return Results.Ok(result);
