@@ -11,6 +11,7 @@ using SafeMum.Infrastructure.Services;
 
 using Microsoft.AspNetCore.Http;
 using SafeMum.Application.Repositories;
+using SafeMum.Application.Features.Communication.ChatGroups;
 
 
 
@@ -32,6 +33,12 @@ namespace SafeMum.Infrastructure.Configuration
 
             service.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterUserRequest).Assembly));
+
+            service.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssemblyContaining<CreateChatGroupHandler>();
+            });
+
 
             return service;
         }

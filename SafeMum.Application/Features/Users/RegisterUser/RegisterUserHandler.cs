@@ -36,8 +36,8 @@ namespace SafeMum.Application.Features.Users.CreateUser
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     CreatedAt = DateTime.UtcNow,
-                    Role = "User",
-                    UserType = request.UserType
+                    Role = request.Role ?? "User",
+                    UserType = request.UserType?? "Visitor"
                 };
 
                 await _client.From<User>().Insert(user);

@@ -42,6 +42,8 @@ namespace SafeMum.Application.Features.Users.CreateUser
 
         public string? UserType { get; set; } = "Visitor";
 
+        public string? Role { get; set; } = "User";
+
 
     }
 
@@ -55,6 +57,8 @@ namespace SafeMum.Application.Features.Users.CreateUser
         public string ErrorMessage { get; set; }
 
         public string UserType { get; set; }
+
+        public string Role { get; set; }
         public Dictionary<string, string> ValidationErrors { get; set; } = new();
 
     }
