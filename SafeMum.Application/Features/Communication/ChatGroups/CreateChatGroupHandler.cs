@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MediatR;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.Communication;
+using SafeMum.Domain.Entities.Users;
 using SafeMum.Infrastructure.Services;
 
 namespace SafeMum.Application.Features.Communication.ChatGroups
@@ -18,45 +19,72 @@ namespace SafeMum.Application.Features.Communication.ChatGroups
         public CreateChatGroupHandler(ISupabaseClientFactory clientFactory)
         {
             _client = clientFactory.GetClient();
-            
+
         }
         public async Task<CreateChatGroupResponse> Handle(CreateChatGroupRequest request, CancellationToken cancellationToken)
         {
 
+            var result = await _client
+       .From<User>()
+       .Where(u => u.Id == request.AdminUserId)
+       .Single();
+
+            var adminUser = result;
+
+            if (adminUser == null || adminUser.Role != "Admin")
+            {
+                throw new UnauthorizedAccessException("Only admins can create chat groups.");
+            }   
+
+
+            var groupId = Guid.NewGuid();
+
             var group = new ChatGroup
             {
-                Id = Guid.NewGuid(),
+                Id = groupId,
                 Name = request.Name,
                 AdminUserId = request.AdminUserId,
                 CreatedAt = DateTime.UtcNow
             };
 
-            group.Members.Add(new GroupMember
+            // 1. Insert ChatGroup only
+            await _client.From<ChatGroup>().Insert(group);
+
+            // 2. Prepare members list
+            var members = new List<GroupMember>();
+
+            // Add admin as a member
+            members.Add(new GroupMember
             {
                 Id = Guid.NewGuid(),
                 UserId = request.AdminUserId,
-                ChatGroupId = group.Id
+                ChatGroupId = groupId
             });
 
+            // Add other users
             foreach (var userId in request.MemberUserIds.Distinct())
             {
-             
                 if (userId == request.AdminUserId) continue;
 
-                group.Members.Add(new GroupMember
+                members.Add(new GroupMember
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
-                    ChatGroupId = group.Id
+                    ChatGroupId = groupId
                 });
             }
-          await  _client.From<ChatGroup>().Insert(group);
+
+            // 3. Insert members into GroupMember table
+            if (members.Any())
+            {
+                await _client.From<GroupMember>().Insert(members);
+            }
+
             return new CreateChatGroupResponse
             {
-                GroupId = group.Id
+                GroupId = groupId
             };
-
-
         }
+
     }
 }

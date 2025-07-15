@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SafeMum.Domain.Entities.Common;
 using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace SafeMum.Domain.Entities.Users
 {
