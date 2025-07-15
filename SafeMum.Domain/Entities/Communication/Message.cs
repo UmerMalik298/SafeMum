@@ -39,5 +39,10 @@ namespace SafeMum.Domain.Entities.Communication
 
         [Supabase.Postgrest.Attributes.Column("isseen")]
         public bool? IsSeen { get; set; }
+
+
+        [Supabase.Postgrest.Attributes.Column("groupid")]
+        public Guid? GroupId { get; set; }
+
     }
 }
