@@ -144,6 +144,7 @@ app.MapContentEndPoints();
 app.MapPregnancyTrackerEndPoints();
 app.MapUserPregnancyInformationEndPoints();
 app.MapCommunicationEndPoints();
+app.MapNutritionTrackingEndPoints();
 
 app.Run();
 
