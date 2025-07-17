@@ -11,6 +11,8 @@ using Microsoft.OpenApi.Models;
 using SafeMum.Application.Common.Exceptions;
 using System.Text.Json;
 using SafeMum.Application.Hubs;
+using Hangfire;
+using Hangfire.MemoryStorage;
 
 
 
@@ -62,6 +64,12 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
+
+
+builder.Services.AddHangfire(config =>
+    config.UseMemoryStorage());
+
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 

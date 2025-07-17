@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using SafeMum.Application.Common;
@@ -18,6 +19,8 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
 
         private readonly Supabase.Client _client;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IBackgroundJobClient _backgroundJobs; 
+        //private readonly FirebaseNotificationService _firebaseService;
 
 
         public AddPrenatalAppointmentHandler(ISupabaseClientFactory clientFactory, IHttpContextAccessor httpContextAccessor)
