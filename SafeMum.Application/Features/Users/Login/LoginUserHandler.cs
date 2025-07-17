@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MediatR;
 using SafeMum.Application.Interfaces;
+using SafeMum.Domain.Entities.Users;
 using Supabase.Gotrue.Exceptions;
 
 namespace SafeMum.Application.Features.Users.Login
@@ -24,6 +25,13 @@ namespace SafeMum.Application.Features.Users.Login
             {
                 var result = await _client.Auth.SignInWithPassword(request.Email, request.Password);
 
+                var  userId = result.User.Id;
+                var userid = Guid.Parse(userId);
+
+
+                var roleResult = await _client.From<User>().Where(x => x.Id == userid).Single();
+
+
                 return new LoginUserResponse
                 {
                     UserId = result.User.Id,
@@ -33,7 +41,8 @@ namespace SafeMum.Application.Features.Users.Login
                     Email = result.User.Email,
                     Token = result.AccessToken,
                     RefreshToken = result.RefreshToken,
-                    ExpiresAt = DateTime.UtcNow.AddSeconds(result.ExpiresIn)
+                    ExpiresAt = DateTime.UtcNow.AddSeconds(result.ExpiresIn),
+                    Role = roleResult.Role
 
                 };
             }

@@ -34,5 +34,6 @@ namespace SafeMum.Application.Features.Users.Login
  
         public string Message { get; set; }
         public List<string> Errors { get; set; } = new();
+        public string Role { get; set; }
     }
 }
