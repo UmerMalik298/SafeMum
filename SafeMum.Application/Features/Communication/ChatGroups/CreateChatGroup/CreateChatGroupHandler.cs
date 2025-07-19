@@ -10,7 +10,7 @@ using SafeMum.Domain.Entities.Communication;
 using SafeMum.Domain.Entities.Users;
 using SafeMum.Infrastructure.Services;
 
-namespace SafeMum.Application.Features.Communication.ChatGroups
+namespace SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup
 {
     public class CreateChatGroupHandler : IRequestHandler<CreateChatGroupRequest, CreateChatGroupResponse>
     {
@@ -34,7 +34,7 @@ namespace SafeMum.Application.Features.Communication.ChatGroups
             if (adminUser == null || adminUser.Role != "Admin")
             {
                 throw new UnauthorizedAccessException("Only admins can create chat groups.");
-            }   
+            }
 
 
             var groupId = Guid.NewGuid();

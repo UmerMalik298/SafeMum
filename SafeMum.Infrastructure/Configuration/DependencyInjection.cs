@@ -11,7 +11,7 @@ using SafeMum.Infrastructure.Services;
 
 using Microsoft.AspNetCore.Http;
 using SafeMum.Application.Repositories;
-using SafeMum.Application.Features.Communication.ChatGroups;
+using SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup;
 
 
 

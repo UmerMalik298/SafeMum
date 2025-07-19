@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MediatR;
 
-namespace SafeMum.Application.Features.Communication.ChatGroups
+namespace SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup
 {
     public class CreateChatGroupRequest : IRequest<CreateChatGroupResponse>
     {
