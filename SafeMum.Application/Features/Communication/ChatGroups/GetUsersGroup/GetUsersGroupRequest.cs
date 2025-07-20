@@ -14,6 +14,7 @@ namespace SafeMum.Application.Features.Communication.ChatGroups.GetUsersGroup
 
     public class GetUsersGroupResponse
     {
+        public Guid GroupId { get; set; }
         public string Name { get; set; }
         public string LastMessageContent { get; set; }
         public DateTime? LastMessageTime { get; set; }

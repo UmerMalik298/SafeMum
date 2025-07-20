@@ -68,6 +68,7 @@ namespace SafeMum.Application.Features.Communication.ChatGroups.GetAllChatGroup
 
                 return new GetAllChatGroupResponse
                 {
+                    GroupId = chatGroupsResult.Model.Id,
                     Name = group.Name,
                     MemberUserIds = memberIds,
                     LastMessageContent = lastMessage?.Content,

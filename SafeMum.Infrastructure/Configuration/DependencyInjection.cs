@@ -30,6 +30,9 @@ namespace SafeMum.Infrastructure.Configuration
             service.AddScoped<IImageUploadService, ImageUploadService>();
             service.AddScoped<IPregnancyTrackerService, PregnancyTrackerService>();
             service.AddScoped<IMessageRepository, MessageRepository>();
+            service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
+            //service.AddHostedService<PrenatalReminderScheduler>();
+
 
             service.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterUserRequest).Assembly));

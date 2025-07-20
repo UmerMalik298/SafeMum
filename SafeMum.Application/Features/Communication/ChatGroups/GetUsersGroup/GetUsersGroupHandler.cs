@@ -60,6 +60,7 @@ namespace SafeMum.Application.Features.Communication.ChatGroups.GetUsersGroup
 
                 return new GetUsersGroupResponse
                 {
+                    GroupId = groupsResult.Model.Id,
                     Name = group.Name,
                     LastMessageContent = lastMessage?.Content,
                     LastMessageTime = lastMessage?.SendAt
