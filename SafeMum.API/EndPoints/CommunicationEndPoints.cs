@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using SafeMum.Application.Features.Communication.ChatGroups.AddUsers;
 using SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup;
 using SafeMum.Application.Features.Communication.ChatGroups.GetAllChatGroup;
 using SafeMum.Application.Features.Communication.ChatGroups.GetGroupMessages;
@@ -66,6 +67,13 @@ namespace SafeMum.API.EndPoints
             });
 
 
+
+
+            group.MapPost("/add-user-in-chat-group", async (AddUserRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
 
             group.MapGet("/get-all-group", async ([AsParameters] GetAllChatGroupRequest request, IMediator mediator) =>
             {

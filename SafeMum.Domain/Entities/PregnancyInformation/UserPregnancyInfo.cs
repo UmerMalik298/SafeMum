@@ -89,6 +89,25 @@ namespace SafeMum.Domain.Entities.PregnancyInformation
 
 
 
+
+        [Supabase.Postgrest.Attributes.Column("name")]
+        public string? Name { get; set; }
+
+        [Supabase.Postgrest.Attributes.Column("husbandname")]
+
+        public string? HusbandName { get; set; }
+
+        [Supabase.Postgrest.Attributes.Column("address")]
+        public string? Address { get; set; }
+
+
+        [Supabase.Postgrest.Attributes.Column("numberofmiscarriages")]
+        public int? NumberOfMiscarriages { get; set; }
+
+        [Supabase.Postgrest.Attributes.Column("cnic")]
+        public string? CNIC { get; set; }
+
+
     }
 
 }
