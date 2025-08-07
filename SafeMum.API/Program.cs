@@ -13,6 +13,7 @@ using System.Text.Json;
 using SafeMum.Application.Hubs;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using SafeMum.Application.Interfaces;
 
 
 
@@ -72,8 +73,16 @@ builder.Services.AddHangfire(config =>
 builder.Services.AddHangfireServer();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var jobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    var reminderJob = scope.ServiceProvider.GetRequiredService<IReminderJob>();
 
-
+    jobManager.AddOrUpdate(
+        "appointment-reminder",
+        () => reminderJob.ExecuteAsync(),
+        Cron.Daily);
+}
 // Heroku HTTPS redirection & headers
 if (!app.Environment.IsDevelopment())
 {

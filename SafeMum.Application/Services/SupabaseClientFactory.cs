@@ -20,11 +20,18 @@ namespace SafeMum.Infrastructure.Services
         {
             var supabaseUrl = config["Supabase:Url"];
             var supabaseKey = config["Supabase:Key"];
-
+            var serviceRoleKey = config["Supabase:ServiceRoleKey"];
             if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(supabaseKey))
                 throw new ArgumentException("Supabase URL or Key is not configured properly");
 
-            _client = new Supabase.Client(supabaseUrl, supabaseKey);
+            var options = new Supabase.SupabaseOptions
+            {
+                AutoRefreshToken = true,
+                AutoConnectRealtime = false
+            };
+
+            _client = new Supabase.Client(supabaseUrl, serviceRoleKey, options);
+            // _client = new Supabase.Client(supabaseUrl, supabaseKey);
             _client.InitializeAsync().Wait();
         }
 

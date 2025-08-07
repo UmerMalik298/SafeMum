@@ -31,7 +31,7 @@ namespace SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup
 
             var adminUser = result;
 
-            if (adminUser == null || adminUser.Role != "Admin")
+            if (adminUser == null || adminUser.Role != "Admin" || adminUser.Role != "admin")
             {
                 throw new UnauthorizedAccessException("Only admins can create chat groups.");
             }

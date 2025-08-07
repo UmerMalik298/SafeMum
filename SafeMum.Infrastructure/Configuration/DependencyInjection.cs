@@ -12,6 +12,7 @@ using SafeMum.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using SafeMum.Application.Repositories;
 using SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup;
+using SafeMum.Application.Services;
 
 
 
@@ -31,6 +32,8 @@ namespace SafeMum.Infrastructure.Configuration
             service.AddScoped<IPregnancyTrackerService, PregnancyTrackerService>();
             service.AddScoped<IMessageRepository, MessageRepository>();
             service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
+            service.AddScoped<ISupabaseAdminService, SupabaseAdminService>();
+            service.AddScoped<IReminderJob, AppointmentReminderJob>();
             //service.AddHostedService<PrenatalReminderScheduler>();
 
 

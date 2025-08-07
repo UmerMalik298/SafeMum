@@ -40,5 +40,9 @@ namespace SafeMum.Domain.Entities.Users
 
         [Column("user_type")]
         public string UserType { get; set; }
+
+
+        [Column("device_token")]
+        public string DeviceToken { get; set; }
     }
 }
