@@ -72,6 +72,10 @@ builder.Services.AddHangfire(config =>
 
 builder.Services.AddHangfireServer();
 
+var serviceKey = builder.Configuration["Supabase:ServiceRoleKey"];
+Console.WriteLine(serviceKey);
+
+
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
