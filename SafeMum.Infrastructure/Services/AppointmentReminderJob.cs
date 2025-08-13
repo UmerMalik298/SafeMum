@@ -27,7 +27,7 @@ namespace SafeMum.Infrastructure.Services
             // Get all appointments scheduled for tomorrow
             var appointmentsResult = await _client
                 .From<PrenatalAppointment>()
-                .Filter("appointment_date", Supabase.Postgrest.Constants.Operator.Equals, tomorrow.ToString("yyyy-MM-dd"))
+                .Filter("AppointmentDate", Supabase.Postgrest.Constants.Operator.Equals, tomorrow.ToString("yyyy-MM-dd"))
                 .Get();
 
             var appointments = appointmentsResult.Models;
