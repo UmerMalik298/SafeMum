@@ -44,5 +44,8 @@ namespace SafeMum.Domain.Entities.Communication
         [Supabase.Postgrest.Attributes.Column("groupid")]
         public Guid? GroupId { get; set; }
 
+        [Supabase.Postgrest.Attributes.Column("messagetype")]
+        public string MessageType { get; set; }
+
     }
 }

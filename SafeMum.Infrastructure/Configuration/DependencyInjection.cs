@@ -34,6 +34,7 @@ namespace SafeMum.Infrastructure.Configuration
             service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
             service.AddScoped<ISupabaseAdminService, SupabaseAdminService>();
             service.AddScoped<IReminderJob, AppointmentReminderJob>();
+            service.AddScoped<IVoiceUploadService, VoiceUploadService>();
             //service.AddHostedService<PrenatalReminderScheduler>();
 
 

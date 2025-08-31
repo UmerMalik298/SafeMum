@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using SafeMum.Application.Features.Communication.ChatGroups.AddUsers;
 using SafeMum.Application.Features.Communication.ChatGroups.CreateChatGroup;
 using SafeMum.Application.Features.Communication.ChatGroups.GetAllChatGroup;
@@ -9,6 +10,7 @@ using SafeMum.Application.Features.Communication.GetAllMessages;
 using SafeMum.Application.Features.Communication.GetAllUsers;
 using SafeMum.Application.Features.Communication.GetMessagesByUser;
 using SafeMum.Application.Features.Communication.GetUserById;
+using SafeMum.Application.Features.Communication.VoiceMessage;
 using SafeMum.Application.Features.PregnancyTracker.CreateWeeklyProfile;
 using SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile;
 
@@ -94,6 +96,14 @@ namespace SafeMum.API.EndPoints
                 var result = await mediator.Send(request);
                 return Results.Ok(result);
             });
+
+            group.MapPost("/send-voice-message", async ([FromForm] SendVoiceMessageRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            }).DisableAntiforgery();
+
+
 
             return app;
         }

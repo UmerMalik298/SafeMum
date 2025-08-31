@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace SafeMum.Application.Interfaces
 {
-    public interface IImageUploadService
+    public interface IVoiceUploadService
     {
-        Task<string?> UploadImageAsync(IFormFile file);
-     
+        Task<string?> UploadVoiceAsync(IFormFile voice);
     }
-
 }

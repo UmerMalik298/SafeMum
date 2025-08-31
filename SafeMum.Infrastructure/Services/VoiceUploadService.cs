@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -11,11 +10,12 @@ using Supabase;
 
 namespace SafeMum.Infrastructure.Services
 {
-    public class ImageUploadService : IImageUploadService
+    public class VoiceUploadService : IVoiceUploadService
     {
+
         private readonly Supabase.Client _client;
         private readonly String _bucketName;
-        public ImageUploadService(IConfiguration configuration)
+        public VoiceUploadService(IConfiguration configuration)
         {
             var url = configuration["Supabase:Url"];
             var key = configuration["Supabase:Key"];
@@ -28,18 +28,18 @@ namespace SafeMum.Infrastructure.Services
 
             _client.InitializeAsync().Wait();
         }
-        public async Task<string?> UploadImageAsync(IFormFile file)
+
+        public async Task<string?> UploadVoiceAsync(IFormFile voice)
         {
-            if (file == null || file.Length == 0)
+            if (voice == null || voice.Length == 0)
                 return null;
 
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var fileName = $"{Guid.NewGuid()}_{voice.FileName}";
 
             using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
+            await voice.CopyToAsync(memoryStream);
             var fileBytes = memoryStream.ToArray();
 
-            // Add error handling
             try
             {
                 var result = await _client.Storage
@@ -48,10 +48,9 @@ namespace SafeMum.Infrastructure.Services
                     {
                         CacheControl = "3600",
                         Upsert = true,
-                        ContentType = file.ContentType
+                        ContentType = voice.ContentType
                     });
 
-                
                 if (result == null)
                     return null;
 
@@ -63,13 +62,9 @@ namespace SafeMum.Infrastructure.Services
             }
             catch (Exception ex)
             {
-               
-                Console.WriteLine($"Upload failed: {ex.Message}");
+                Console.WriteLine($"Voice upload failed: {ex.Message}");
                 return null;
             }
         }
-
-
-
     }
 }
