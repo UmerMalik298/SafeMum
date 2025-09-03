@@ -21,11 +21,13 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
         private readonly Supabase.Client _client;
         private readonly IPregnancyTrackerService _pregnancyTrackerService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public GetWeeklyProfileHandler(ISupabaseClientFactory clientFactory, IPregnancyTrackerService pregnancyTrackerService, IHttpContextAccessor httpContextAccessor)
+        private readonly ITranslationService _translationService;
+        public GetWeeklyProfileHandler(ISupabaseClientFactory clientFactory, IPregnancyTrackerService pregnancyTrackerService, IHttpContextAccessor httpContextAccessor, ITranslationService translationService)
         {
             _client = clientFactory.GetClient();
             _pregnancyTrackerService = pregnancyTrackerService;
             _httpContextAccessor = httpContextAccessor;
+            _translationService = translationService;
         }
         public async Task<WeeklyPregnancyProfileResponse> Handle(GetWeeklyProfileRequest request, CancellationToken cancellationToken)
         {
@@ -53,6 +55,12 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
                 throw new AppException("Profile Not Found", 404);
             }
 
+           
+            var BabyDevelopmentUrdu = await _translationService.TranslateToUrduAsync(profile.BabyDevelopment);
+            var MotherChangesUrdu = await _translationService.TranslateToUrduAsync(profile.EmotionalChanges);
+            var NutritionTipsUrdu = await _translationService.TranslateToUrduAsync(profile.NutritionTips);
+            var DangerSignsUrdu = await _translationService.TranslateToUrduAsync(profile.DangerSigns);
+            var RecommendedActionsUrdu =  await _translationService.TranslateToUrduAsync(profile.RecommendedActions);
             return new WeeklyPregnancyProfileResponse
             {
                 WeekNumber = profile.WeekNumber,
@@ -60,7 +68,17 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
                 MotherChanges = $"{profile.PhysicalChanges}\n{profile.EmotionalChanges}",
                 NutritionTips = profile.NutritionTips,
                 DangerSigns = profile.DangerSigns,
-                RecommendedActions = profile.RecommendedActions
+                RecommendedActions = profile.RecommendedActions,
+
+
+               
+                BabyDevelopmentUr = BabyDevelopmentUrdu ,
+                MotherChangesUr = MotherChangesUrdu,
+                NutritionTipsUr = NutritionTipsUrdu,
+                DangerSignsUr = DangerSignsUrdu,
+                RecommendedActionsUr = RecommendedActionsUrdu
+
+
             };
 
        

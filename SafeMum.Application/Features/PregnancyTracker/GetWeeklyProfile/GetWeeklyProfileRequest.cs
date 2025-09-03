@@ -18,6 +18,15 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
         public string NutritionTips { get; set; }
         public string DangerSigns { get; set; }
         public string RecommendedActions { get; set; }
+
+
+
+     
+        public string? BabyDevelopmentUr { get; set; }
+        public string? MotherChangesUr { get; set; }
+        public string? NutritionTipsUr { get; set; }
+        public string? DangerSignsUr { get; set; }
+        public string? RecommendedActionsUr { get; set; }
     }
 
 }
