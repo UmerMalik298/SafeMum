@@ -166,6 +166,7 @@ app.MapPregnancyTrackerEndPoints();
 app.MapUserPregnancyInformationEndPoints();
 app.MapCommunicationEndPoints();
 app.MapNutritionTrackingEndPoints();
+app.MapNotificationEndPoints();
 
 app.UseHangfireDashboard("/hangfire");
 

@@ -7,6 +7,8 @@ using MediatR;
 using SafeMum.Application.Common;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.Common;
+using SafeMum.Domain.Entities.Users;
+
 
 namespace SafeMum.Application.Features.DeviceTokens.RegisterDeviceToken
 {
@@ -21,6 +23,12 @@ namespace SafeMum.Application.Features.DeviceTokens.RegisterDeviceToken
 
         public async Task<Result> Handle(RegisterDeviceTokenRequest request, CancellationToken cancellationToken)
         {
+
+            var userId = await _client.From<User>().Single();
+            if (userId == null)
+            {
+                return Result.Failure("User Not Found");
+            }
             var tokenRecord = new DeviceToken
             {
                 Id = Guid.NewGuid(), // Generate a proper new Guid
