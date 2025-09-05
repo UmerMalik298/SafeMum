@@ -9,6 +9,7 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
 {
     public class GetWeeklyProfileRequest : IRequest<WeeklyPregnancyProfileResponse>
     {
+        public string? Language { get; set; } = "en";
     }
     public class WeeklyPregnancyProfileResponse
     {
@@ -22,11 +23,11 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
 
 
      
-        public string? BabyDevelopmentUr { get; set; }
-        public string? MotherChangesUr { get; set; }
-        public string? NutritionTipsUr { get; set; }
-        public string? DangerSignsUr { get; set; }
-        public string? RecommendedActionsUr { get; set; }
+        //public string? BabyDevelopmentUr { get; set; }
+        //public string? MotherChangesUr { get; set; }
+        //public string? NutritionTipsUr { get; set; }
+        //public string? DangerSignsUr { get; set; }
+        //public string? RecommendedActionsUr { get; set; }
     }
 
 }

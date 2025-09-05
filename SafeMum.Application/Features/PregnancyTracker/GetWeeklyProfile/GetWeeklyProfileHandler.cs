@@ -55,33 +55,56 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
                 throw new AppException("Profile Not Found", 404);
             }
 
-           
-            var BabyDevelopmentUrdu = await _translationService.TranslateToUrduAsync(profile.BabyDevelopment);
-            var MotherChangesUrdu = await _translationService.TranslateToUrduAsync(profile.EmotionalChanges);
-            var NutritionTipsUrdu = await _translationService.TranslateToUrduAsync(profile.NutritionTips);
-            var DangerSignsUrdu = await _translationService.TranslateToUrduAsync(profile.DangerSigns);
-            var RecommendedActionsUrdu =  await _translationService.TranslateToUrduAsync(profile.RecommendedActions);
+            var language = (request.Language?.ToLower() ?? "en") switch
+            {
+                "ur" => "ur",
+                _ => "en"
+            };
+            string? babyDevUr = null, motherChangesUr = null, nutritionTipsUr = null, dangerSignsUr = null, recommendedActionsUr = null;
+
+            if (language == "ur")
+            {
+                babyDevUr = await _translationService.TranslateToUrduAsync(profile.BabyDevelopment);
+                motherChangesUr = await _translationService.TranslateToUrduAsync(profile.EmotionalChanges);
+                nutritionTipsUr = await _translationService.TranslateToUrduAsync(profile.NutritionTips);
+                dangerSignsUr = await _translationService.TranslateToUrduAsync(profile.DangerSigns);
+                recommendedActionsUr = await _translationService.TranslateToUrduAsync(profile.RecommendedActions);
+            }
+
+          
+
+            string babyDevelopment, motherChanges, nutritionTips, dangerSigns, recommendedActions;
+
+            if (language == "ur")
+            {
+                babyDevelopment = await _translationService.TranslateToUrduAsync(profile.BabyDevelopment);
+                motherChanges = $"{profile.PhysicalChanges}\n{await _translationService.TranslateToUrduAsync(profile.EmotionalChanges)}";
+                nutritionTips = await _translationService.TranslateToUrduAsync(profile.NutritionTips);
+                dangerSigns = await _translationService.TranslateToUrduAsync(profile.DangerSigns);
+                recommendedActions = await _translationService.TranslateToUrduAsync(profile.RecommendedActions);
+            }
+            else
+            {
+                babyDevelopment = profile.BabyDevelopment;
+                motherChanges = $"{profile.PhysicalChanges}\n{profile.EmotionalChanges}";
+                nutritionTips = profile.NutritionTips;
+                dangerSigns = profile.DangerSigns;
+                recommendedActions = profile.RecommendedActions;
+            }
+
             return new WeeklyPregnancyProfileResponse
             {
                 WeekNumber = profile.WeekNumber,
-                BabyDevelopment = profile.BabyDevelopment,
-                MotherChanges = $"{profile.PhysicalChanges}\n{profile.EmotionalChanges}",
-                NutritionTips = profile.NutritionTips,
-                DangerSigns = profile.DangerSigns,
-                RecommendedActions = profile.RecommendedActions,
-
-
-               
-                BabyDevelopmentUr = BabyDevelopmentUrdu ,
-                MotherChangesUr = MotherChangesUrdu,
-                NutritionTipsUr = NutritionTipsUrdu,
-                DangerSignsUr = DangerSignsUrdu,
-                RecommendedActionsUr = RecommendedActionsUrdu
-
-
+                BabyDevelopment = babyDevelopment,
+                MotherChanges = motherChanges,
+                NutritionTips = nutritionTips,
+                DangerSigns = dangerSigns,
+                RecommendedActions = recommendedActions
             };
 
-       
+
+
+
 
         }
     }
