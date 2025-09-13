@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using SafeMum.Application.Common.Exceptions;
 using SafeMum.Application.Interfaces;
+using SafeMum.Domain.Entities.Content;
 using SafeMum.Domain.Entities.PregnancyInformation;
 using SafeMum.Domain.Entities.Users;
 using SafeMum.Domain.Entities.WeeklyPregnancyProfile;
@@ -25,14 +26,18 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
         }
         public async Task<GetDashboardInformationResponse> Handle(GetDashboardInformationRequest request, CancellationToken cancellationToken)
         {
-            var UserId = await _client.From<User>().Single();
+            var UserId = await _client.From<User>().Where(x=>x.Id== request.Id).Single();
             if (UserId == null)
             {
 
                 throw new ApplicationException("User May Not Found");
             }
-
-            var pregnancyInfo = await _client.From<UserPregnancyInfo>().Where(x => x.UserId == request.Id.ToString()).Single() ??
+            var contentItem = await _client
+      .From<contentitem>()
+      .Select("image_url,tags")
+      .Get();
+            var contentItems = contentItem.Models.FirstOrDefault();
+            var pregnancyInfo = await _client.From<UserPregnancyInfo>().Where(x => x.UserId == request.Id).Single() ??
             throw new AppException("Pregnancy Data Not Found", 404);
 
 
@@ -47,7 +52,13 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
 
             return new GetDashboardInformationResponse
             {
-                
+                Name = UserId.FirstName,
+                BloodGroup = pregnancyInfo.BloodGroup,
+                CurrentWeek = currentWeek,
+                ImageURL = contentItems.image_url,
+                Symptoms = contentItems.tags
+
+
             };
         }
     }

@@ -7,6 +7,7 @@ using SafeMum.Application.Features.Content.GetAllContentGroup;
 using SafeMum.Application.Features.Content.GetAllContentGroupItems;
 using SafeMum.Application.Features.Content.GetAllContentItem;
 using SafeMum.Application.Features.Content.GetContentItemById;
+using SafeMum.Application.Features.Content.GetDashboardInformation;
 using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Features.Users.Login;
 
@@ -92,6 +93,11 @@ namespace SafeMum.API.EndPoints
             });
 
 
+            group.MapGet("/dashboard-content", async ([AsParameters] GetDashboardInformationRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
             return app;
         }
     }

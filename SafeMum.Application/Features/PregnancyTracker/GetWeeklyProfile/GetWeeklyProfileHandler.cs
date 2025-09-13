@@ -33,12 +33,12 @@ namespace SafeMum.Application.Features.PregnancyTracker.GetWeeklyProfile
         {
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-
+            
             if (string.IsNullOrWhiteSpace(userId))
                 throw new AppException("User Data Not Found", 404);
 
-
-            var pregnancyInfo = await _client.From<UserPregnancyInfo>().Where(x => x.UserId == userId).Single() ?? 
+            Guid parsedGuid = Guid.Parse(userId);
+            var pregnancyInfo = await _client.From<UserPregnancyInfo>().Where(x => x.UserId == parsedGuid).Single() ?? 
                 throw new AppException("Pregnancy Data Not Found", 404);
 
 

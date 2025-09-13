@@ -33,14 +33,14 @@ namespace SafeMum.Application.Features.UserPregnancyInformation
 
                 if (string.IsNullOrWhiteSpace(userId))
                     return Result.Failure("User is Not Authenticated");
-                
 
+                Guid parsedGuid = Guid.Parse(userId);
                 var userPregnancyInfo = new UserPregnancyInfo
                 {
 
                     Id = Guid.NewGuid(),
 
-                    UserId = userId ,
+                    UserId = parsedGuid,
                     IsCurrentlyPregnant = request.CurrentlyPregnant,
                     EDD = request.EDD.HasValue
                         ? request.EDD.Value.ToDateTime(TimeOnly.MinValue)

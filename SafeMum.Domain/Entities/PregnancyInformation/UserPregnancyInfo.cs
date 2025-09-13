@@ -18,7 +18,7 @@ namespace SafeMum.Domain.Entities.PregnancyInformation
         public Guid Id { get; set; }
 
         [Supabase.Postgrest.Attributes.Column("userid")]
-        public string UserId { get; set; }
+        public Guid UserId { get; set; }
 
         [Supabase.Postgrest.Attributes.Column("iscurrentlypregnant")]
         public bool? IsCurrentlyPregnant { get; set; } = true;

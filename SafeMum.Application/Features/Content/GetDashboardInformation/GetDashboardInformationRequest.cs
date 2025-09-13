@@ -14,6 +14,7 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
     public class GetDashboardInformationResponse
     {
 
+        public string Name { get; set; }
         public int? CurrentWeek { get; set; }
         public string? ImageURL { get; set; }
 
