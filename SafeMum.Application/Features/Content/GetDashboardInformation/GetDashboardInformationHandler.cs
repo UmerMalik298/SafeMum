@@ -7,6 +7,7 @@ using MediatR;
 using SafeMum.Application.Common.Exceptions;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.Content;
+using SafeMum.Domain.Entities.NutritionHealthTracking;
 using SafeMum.Domain.Entities.PregnancyInformation;
 using SafeMum.Domain.Entities.Users;
 using SafeMum.Domain.Entities.WeeklyPregnancyProfile;
@@ -48,7 +49,7 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
                 _pregnancyTrackerService.CalculateWeekFromLMP(pregnancyInfo.LMP.Value);
 
             var profile = await _client.From<WeeklyPregnancyProfile>().Where(x => x.WeekNumber == currentWeek).Single();
-
+            var waterintake = await _client.From<WaterIntakeLog>().Where(x => x.UserId == request.Id).Single();
 
             return new GetDashboardInformationResponse
             {
@@ -57,7 +58,8 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
                 CurrentWeek = currentWeek,
                 ImageURL = contentItems.image_url,
                 Symptoms = contentItems.tags,
-                RecommendedActions = profile.RecommendedActions
+                RecommendedActions = profile.RecommendedActions,
+                AmountInMl = waterintake.AmountInMl,
 
 
             };
