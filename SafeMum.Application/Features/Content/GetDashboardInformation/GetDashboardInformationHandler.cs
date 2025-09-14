@@ -56,7 +56,8 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
                 BloodGroup = pregnancyInfo.BloodGroup,
                 CurrentWeek = currentWeek,
                 ImageURL = contentItems.image_url,
-                Symptoms = contentItems.tags
+                Symptoms = contentItems.tags,
+                RecommendedActions = profile.RecommendedActions
 
 
             };

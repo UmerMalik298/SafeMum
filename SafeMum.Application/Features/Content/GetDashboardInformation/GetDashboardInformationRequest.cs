@@ -20,6 +20,7 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
 
         public string BloodGroup { get; set; }
 
+        public string? RecommendedActions { get; set; }
         public List<string> Symptoms { get; set; }
     }
 }
