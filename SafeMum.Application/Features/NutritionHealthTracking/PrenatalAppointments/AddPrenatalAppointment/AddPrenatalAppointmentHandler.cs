@@ -53,7 +53,8 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
 
             await _client.From<PrenatalAppointment>().Insert(prenatalAppoint);
 
-            var jobTime = prenatalAppoint.AppointmentDate.AddDays(-1);
+            //var jobTime = prenatalAppoint.AppointmentDate.AddDays(-1);
+            var jobTime = prenatalAppoint.AppointmentDate.AddMinutes(-3);
             _backgroundJobs.Schedule<AppointmentReminderJob>(
                 job => job.SendAppointmentRemindersAsync(prenatalAppoint.Id),
                 jobTime

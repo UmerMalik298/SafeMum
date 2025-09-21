@@ -43,7 +43,7 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.Supplement.AddSup
 
             var result = new SupplementLog
             {
-                Id = new Guid(),
+                Id = Guid.NewGuid(),
                 UserId = Guid.Parse(userId),
                 Name = request.Name,
                 Dosage = request.Dosage 

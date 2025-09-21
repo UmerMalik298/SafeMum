@@ -24,7 +24,7 @@ namespace SafeMum.Application.Features.DeviceTokens.RegisterDeviceToken
         public async Task<Result> Handle(RegisterDeviceTokenRequest request, CancellationToken cancellationToken)
         {
 
-            var userId = await _client.From<User>().Single();
+            var userId = await _client.From<User>().Where(x=>x.Id == request.UserId).Single();
             if (userId == null)
             {
                 return Result.Failure("User Not Found");
@@ -41,7 +41,7 @@ namespace SafeMum.Application.Features.DeviceTokens.RegisterDeviceToken
 
             if (response == null || response.Models == null || response.Models.Count == 0)
                 return Result.Failure("Token registration failed.");
-
+            
             return Result.Success();
         }
 

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using SafeMum.Application.Features.Content.CreateContentGroup;
 using SafeMum.Application.Features.DeviceTokens.RegisterDeviceToken;
+using SafeMum.Application.Features.DeviceTokens.TestNotification;
 
 namespace SafeMum.API.EndPoints
 {
@@ -12,6 +13,11 @@ namespace SafeMum.API.EndPoints
             group.RequireAuthorization();
 
             group.MapPost("/register-device-token", async (RegisterDeviceTokenRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
+            group.MapPost("/test-notification", async (TestNotificationRequest request, IMediator mediator) =>
             {
                 var result = await mediator.Send(request);
                 return Results.Ok(result);

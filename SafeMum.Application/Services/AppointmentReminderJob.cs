@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SafeMum.Application.Interfaces;
+using SafeMum.Domain.Entities.Common;
 using SafeMum.Domain.Entities.NutritionHealthTracking;
 using SafeMum.Domain.Entities.Users;
 
@@ -27,7 +28,7 @@ namespace SafeMum.Infrastructure.Services
             // Get all appointments scheduled for tomorrow
             var appointmentsResult = await _client
                 .From<PrenatalAppointment>()
-                .Filter("appointment_date", Supabase.Postgrest.Constants.Operator.Equals, tomorrow.ToString("yyyy-MM-dd"))
+                .Filter("appointmentDate", Supabase.Postgrest.Constants.Operator.Equals, tomorrow.ToString("yyyy-MM-dd"))
                 .Get();
 
             var appointments = appointmentsResult.Models;
@@ -57,20 +58,31 @@ namespace SafeMum.Infrastructure.Services
             var appointment = appointmentResult.Models.FirstOrDefault();
             if (appointment == null) return;
 
-            // Get user
-            var userResult = await _client
-                .From<User>()
-                .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, appointment.UserId.ToString())
+            // Get device tokens for this user
+            var tokensResult = await _client
+                .From<DeviceToken>()
+                .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, appointment.UserId.ToString())
                 .Get();
 
-            var user = userResult.Models.FirstOrDefault();
-            if (user == null || string.IsNullOrEmpty(user.DeviceToken)) return;
+            var deviceTokens = tokensResult.Models;
+            if (deviceTokens == null || !deviceTokens.Any()) return;
 
-            // Send notification
+            // Send notification to each token
             var title = "Appointment Reminder";
             var body = $"You have an appointment with {appointment.DoctorName} tomorrow at {appointment.HospitalNamae}.";
-            await _notificationService.SendPushNotification(user.DeviceToken, title, body);
+
+            foreach (var token in deviceTokens)
+            {
+                try
+                {
+                    await _notificationService.SendPushNotification(token.Token, title, body);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to send notification to token {token.Token}: {ex.Message}");
+                }
+            }
         }
     }
-
 }
+
