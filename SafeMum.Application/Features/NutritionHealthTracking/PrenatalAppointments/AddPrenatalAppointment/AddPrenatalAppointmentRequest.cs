@@ -13,6 +13,7 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
         public string DoctorName { get; set; }
         public string HospitalNamae { get; set; }
         public DateTime AppointmentDate { get; set; }
+        public TimeSpan AppointmentTime { get; set; }
         public string Location { get; set; }
     }
 }

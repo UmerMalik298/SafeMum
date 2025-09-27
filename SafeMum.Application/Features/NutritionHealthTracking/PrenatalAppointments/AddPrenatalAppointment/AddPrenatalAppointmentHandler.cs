@@ -20,7 +20,7 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
         private readonly Supabase.Client _client;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IBackgroundJobClient _backgroundJobs;
-      
+
         private readonly IPushNotificationService _notificationService;
         private readonly IReminderJob _reminderJob;
 
@@ -37,23 +37,23 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
         public async Task<Result> Handle(AddPrenatalAppointmentRequest request, CancellationToken cancellationToken)
         {
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             var userid = Guid.Parse(userId);
+
+            // Combine date and time
+            var appointmentDateTime = request.AppointmentDate.Date + request.AppointmentTime;
+
             var prenatalAppoint = new PrenatalAppointment
             {
-                Id  = new Guid(),
+                Id = Guid.NewGuid(),
                 UserId = userid,
                 DoctorName = request.DoctorName,
                 HospitalNamae = request.HospitalNamae,
-                AppointmentDate = request.AppointmentDate,  
-
+                AppointmentDate = appointmentDateTime,  // Store full datetime
                 Location = request.Location,
             };
 
-
             await _client.From<PrenatalAppointment>().Insert(prenatalAppoint);
 
-            //var jobTime = prenatalAppoint.AppointmentDate.AddDays(-1);
             var jobTime = prenatalAppoint.AppointmentDate.AddMinutes(-3);
             _backgroundJobs.Schedule<AppointmentReminderJob>(
                 job => job.SendAppointmentRemindersAsync(prenatalAppoint.Id),
