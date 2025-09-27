@@ -32,6 +32,8 @@ public class TestNotificationHandler : IRequestHandler<TestNotificationRequest, 
         if (device == null || string.IsNullOrEmpty(device.Token))
             return Result.Failure("Device token not found for this user.");
 
+        Console.WriteLine($"Found token for user {request.UserId}: {device.Token.Substring(0, 10)}...");
+
         try
         {
             // Try to send notification
@@ -41,14 +43,17 @@ public class TestNotificationHandler : IRequestHandler<TestNotificationRequest, 
                 body: "This is a v1 API test!"
             );
 
+            Console.WriteLine("Test notification sent successfully!");
             return Result.Success();
         }
         catch (Exception ex)
         {
-          
+            Console.WriteLine($"Error sending test notification: {ex.Message}");
+
             if (ex.Message.Contains("\"errorCode\": \"UNREGISTERED\""))
             {
-                
+                Console.WriteLine("Token is unregistered, removing from database...");
+
                 await _client
                     .From<DeviceToken>()
                     .Where(x => x.Id == device.Id)
@@ -57,8 +62,18 @@ public class TestNotificationHandler : IRequestHandler<TestNotificationRequest, 
                 return Result.Failure("Device token was unregistered and has been removed.");
             }
 
-           
-            throw;
+            // Add more specific error handling
+            if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
+            {
+                return Result.Failure("Firebase authentication failed. Check service account credentials.");
+            }
+
+            if (ex.Message.Contains("404") || ex.Message.Contains("Not Found"))
+            {
+                return Result.Failure("Firebase project not found. Check project ID.");
+            }
+
+            return Result.Failure($"Failed to send test notification: {ex.Message}");
         }
     }
 
