@@ -14,6 +14,8 @@ using SafeMum.Application.Hubs;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using SafeMum.Application.Interfaces;
+using MongoDB.Driver.Core.Configuration;
+using SafeMum.API.Hubs;
 
 
 
@@ -71,7 +73,11 @@ builder.Services.AddHangfire(config =>
     config.UseMemoryStorage());
 
 builder.Services.AddHangfireServer();
-
+builder.Services.AddHangfire(configuration => configuration
+       .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+       .UseSimpleAssemblyNameTypeSerializer()
+       .UseRecommendedSerializerSettings()
+       .UsePostgreSqlStorage(ConnectionString));
 var serviceKey = builder.Configuration["Supabase:ServiceRoleKey"];
 Console.WriteLine(serviceKey);
 
@@ -128,6 +134,7 @@ app.MapGet("/", () => Results.Json(new
     timestamp = DateTime.UtcNow
 }));
 app.MapHub<ChatHub>("/chatHub");
+app.MapHub<NotificationHub>("/notificationHub");
 app.UseStaticFiles();
 app.UseDefaultFiles();
 

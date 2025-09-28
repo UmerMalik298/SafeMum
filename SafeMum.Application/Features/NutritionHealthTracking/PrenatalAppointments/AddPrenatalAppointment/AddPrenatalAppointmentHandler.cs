@@ -23,16 +23,18 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
 
         private readonly IPushNotificationService _notificationService;
         private readonly IReminderJob _reminderJob;
+        private readonly IInAppNotificationService _inAppNotificationService;
 
 
 
-        public AddPrenatalAppointmentHandler(ISupabaseClientFactory clientFactory, IHttpContextAccessor httpContextAccessor, IPushNotificationService notificationService, IBackgroundJobClient backgroundJobs, IReminderJob reminderJob)
+        public AddPrenatalAppointmentHandler(ISupabaseClientFactory clientFactory, IHttpContextAccessor httpContextAccessor, IPushNotificationService notificationService, IBackgroundJobClient backgroundJobs, IReminderJob reminderJob, IInAppNotificationService inAppNotificationService)
         {
             _client = clientFactory.GetClient();
             _httpContextAccessor = httpContextAccessor;
             _notificationService = notificationService;
             _backgroundJobs = backgroundJobs;
             _reminderJob = reminderJob;
+            _inAppNotificationService = inAppNotificationService;
         }
         public async Task<Result> Handle(AddPrenatalAppointmentRequest request, CancellationToken cancellationToken)
         {
@@ -54,11 +56,48 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
 
             await _client.From<PrenatalAppointment>().Insert(prenatalAppoint);
 
-            var jobTime = prenatalAppoint.AppointmentDate.AddMinutes(-3);
-            _backgroundJobs.Schedule<AppointmentReminderJob>(
-                job => job.SendAppointmentRemindersAsync(prenatalAppoint.Id),
-                jobTime
-            );
+
+
+            await _inAppNotificationService.CreateNotificationAsync(
+        userid,
+        "Appointment Scheduled",
+        $"Your appointment with Dr. {request.DoctorName} has been scheduled for {appointmentDateTime:MMM dd, yyyy 'at' h:mm tt}",
+        "appointment",
+        new { appointmentId = prenatalAppoint.Id }
+    );
+
+            // Schedule multiple reminders
+            var appointmentDate = prenatalAppoint.AppointmentDate;
+
+            // 24 hours before
+            var reminderTime24h = appointmentDate.AddHours(-24);
+            if (reminderTime24h > DateTime.UtcNow)
+            {
+                _backgroundJobs.Schedule<AppointmentReminderJob>(
+                    job => job.Send24HourReminderAsync(prenatalAppoint.Id),
+                    reminderTime24h
+                );
+            }
+
+            // 1 hour before  
+            var reminderTime1h = appointmentDate.AddHours(-1);
+            if (reminderTime1h > DateTime.UtcNow)
+            {
+                _backgroundJobs.Schedule<AppointmentReminderJob>(
+                    job => job.Send1HourReminderAsync(prenatalAppoint.Id),
+                    reminderTime1h
+                );
+            }
+
+            // 15 minutes before
+            var reminderTime15m = appointmentDate.AddMinutes(-15);
+            if (reminderTime15m > DateTime.UtcNow)
+            {
+                _backgroundJobs.Schedule<AppointmentReminderJob>(
+                    job => job.Send15MinuteReminderAsync(prenatalAppoint.Id),
+                    reminderTime15m
+                );
+            }
 
             return Result.Success();
         }
