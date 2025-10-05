@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -11,75 +12,34 @@ using SafeMum.Application.Interfaces;
 
 namespace SafeMum.Infrastructure.Services
 {
-    public class FirebaseNotificationService : IPushNotificationService
+    public class NodeNotificationService : IPushNotificationService
     {
         private readonly HttpClient _httpClient;
-        private readonly GoogleCredential _googleCredential;
-        private readonly string _projectId;
+        private readonly string _nodeApiBaseUrl;
 
-        public FirebaseNotificationService(IConfiguration config)
+        public NodeNotificationService(IConfiguration config, HttpClient httpClient)
         {
-            _httpClient = new HttpClient();
-            _projectId = config["Firebase:ProjectId"];
-
-            // Load service account credentials from file
-            _googleCredential = GoogleCredential
-                .FromFile(config["Firebase:ServiceAccountFile"])
-                .CreateScoped("https://www.googleapis.com/auth/firebase.messaging");
+            _httpClient = httpClient;
+            _nodeApiBaseUrl = config["http://localhost:5001"]; // e.g. http://localhost:5001
         }
 
         public async Task SendPushNotification(string deviceToken, string title, string body)
         {
-            try
+            var payload = new
             {
-                Console.WriteLine($"Attempting to send notification to token: {deviceToken}");
+                deviceToken,
+                title,
+                body
+            };
 
-                // Get OAuth2 access token
-                var accessToken = await _googleCredential.UnderlyingCredential.GetAccessTokenForRequestAsync();
-                Console.WriteLine($"Access token obtained: {!string.IsNullOrEmpty(accessToken)}");
+            var response = await _httpClient.PostAsJsonAsync(
+                $"{_nodeApiBaseUrl}/send-notification", payload);
 
-                var request = new HttpRequestMessage(
-                    HttpMethod.Post,
-                    $"https://fcm.googleapis.com/v1/projects/{_projectId}/messages:send");
-
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-                var payload = new
-                {
-                    message = new
-                    {
-                        token = deviceToken,
-                        notification = new
-                        {
-                            title,
-                            body
-                        }
-                    }
-                };
-
-                var jsonPayload = JsonSerializer.Serialize(payload);
-                Console.WriteLine($"Payload: {jsonPayload}");
-
-                request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.SendAsync(request);
-                var result = await response.Content.ReadAsStringAsync();
-
-                Console.WriteLine($"FCM Response: {response.StatusCode} - {result}");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception($"FCM error: {response.StatusCode} - {result}");
-                }
-
-                Console.WriteLine("Notification sent successfully");
-            }
-            catch (Exception ex)
+            if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error in SendPushNotification: {ex.Message}");
-                throw;
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Node API error: {response.StatusCode} - {error}");
             }
         }
     }
-    }
-
+}
