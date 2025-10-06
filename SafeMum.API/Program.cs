@@ -1,5 +1,6 @@
 ﻿using Hangfire;
-using Hangfire.MemoryStorage;
+using Hangfire.Common;
+
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -8,7 +9,7 @@ using Microsoft.OpenApi.Models;
 using MongoDB.Driver.Core.Configuration;
 using SafeMum.API.EndPoints;
 using SafeMum.API.Hubs;
-using SafeMum.API.Hubs.SafeMum.API.Hubs;
+
 using SafeMum.Application.Common.Exceptions;
 using SafeMum.Application.Features.Users.ForgotPassword;
 using SafeMum.Application.Hubs;
@@ -71,30 +72,36 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 
 
-builder.Services.AddHangfire(config =>
-    config.UseMemoryStorage());
 
 
-builder.Services.AddSignalR();  // For in-app notifications
-builder.Services.AddHangfire(configuration => configuration
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("HangfireConnection"))
-);
-builder.Services.AddHangfireServer();
 
-var app = builder.Build();
-using (var scope = app.Services.CreateScope())
+var hfConn = builder.Configuration.GetConnectionString("HangfireConnection");
+builder.Services.AddHangfire(cfg =>
 {
-    var jobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-    var reminderJob = scope.ServiceProvider.GetRequiredService<IReminderJob>();
-    jobManager.AddOrUpdate(
-        "appointment-reminder",
-        () => reminderJob.ExecuteAsync(),
-        Cron.Daily   // Runs once per day:contentReference[oaicite:3]{index=3}
-    );
-}
+    cfg.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+       .UseSimpleAssemblyNameTypeSerializer()
+       .UseRecommendedSerializerSettings()
+       .UsePostgreSqlStorage(hfConn, new PostgreSqlStorageOptions
+       {
+           SchemaName = "hangfire",
+           PrepareSchemaIfNecessary = true,
+           DistributedLockTimeout = TimeSpan.FromSeconds(30)
+       });
+});
+builder.Services.AddHangfireServer();
+var app = builder.Build();
+var jobs = app.Services.GetRequiredService<IRecurringJobManager>();
+jobs.AddOrUpdate(
+    "appointment-reminder",
+    Job.FromExpression<IReminderJob>(j => j.ExecuteAsync()),
+    Cron.Daily(), // ✅ must call the method to get the string
+    new RecurringJobOptions
+    {
+        TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Karachi"),
+        QueueName = "default"
+    }
+);
+
 // Heroku HTTPS redirection & headers
 if (!app.Environment.IsDevelopment())
 {
@@ -136,7 +143,8 @@ app.MapGet("/", () => Results.Json(new
     timestamp = DateTime.UtcNow
 }));
 app.MapHub<ChatHub>("/chatHub");
-app.MapHub<NotificationHub>("/notificationHub");
+app.MapHub<SafeMum.API.Hubs.SafeMum.API.Hubs.NotificationHub>("/notificationHub");
+
 app.UseStaticFiles();
 app.UseDefaultFiles();
 
