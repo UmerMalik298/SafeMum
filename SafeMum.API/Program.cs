@@ -1,21 +1,21 @@
-﻿using System.Text;
+﻿using Hangfire;
+using Hangfire.MemoryStorage;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
-using SafeMum.API.EndPoints;
-using SafeMum.Application.Features.Users.ForgotPassword;
-using SafeMum.Infrastructure.Configuration;
-
-
 using Microsoft.OpenApi.Models;
-using SafeMum.Application.Common.Exceptions;
-using System.Text.Json;
-using SafeMum.Application.Hubs;
-using Hangfire;
-using Hangfire.MemoryStorage;
-using SafeMum.Application.Interfaces;
 using MongoDB.Driver.Core.Configuration;
+using SafeMum.API.EndPoints;
 using SafeMum.API.Hubs;
+using SafeMum.API.Hubs.SafeMum.API.Hubs;
+using SafeMum.Application.Common.Exceptions;
+using SafeMum.Application.Features.Users.ForgotPassword;
+using SafeMum.Application.Hubs;
+using SafeMum.Application.Interfaces;
+using SafeMum.Infrastructure.Configuration;
+using System.Text;
+using System.Text.Json;
 
 
 
@@ -28,6 +28,8 @@ builder.WebHost.UseUrls($"http://*:{port}");
 // Register services
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddScoped<INotificationGateway, SignalRNotificationGateway>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SafeMum API", Version = "v1" });
@@ -72,26 +74,26 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHangfire(config =>
     config.UseMemoryStorage());
 
-builder.Services.AddHangfireServer();
-builder.Services.AddHangfire(configuration => configuration
-       .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-       .UseSimpleAssemblyNameTypeSerializer()
-       .UseRecommendedSerializerSettings()
-       .UsePostgreSqlStorage(ConnectionString));
-var serviceKey = builder.Configuration["Supabase:ServiceRoleKey"];
-Console.WriteLine(serviceKey);
 
+builder.Services.AddSignalR();  // For in-app notifications
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("HangfireConnection"))
+);
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var jobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     var reminderJob = scope.ServiceProvider.GetRequiredService<IReminderJob>();
-
     jobManager.AddOrUpdate(
         "appointment-reminder",
         () => reminderJob.ExecuteAsync(),
-        Cron.Daily);
+        Cron.Daily   // Runs once per day:contentReference[oaicite:3]{index=3}
+    );
 }
 // Heroku HTTPS redirection & headers
 if (!app.Environment.IsDevelopment())

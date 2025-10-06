@@ -31,10 +31,18 @@ namespace SafeMum.Infrastructure.Configuration
             service.AddScoped<IImageUploadService, ImageUploadService>();
             service.AddScoped<IPregnancyTrackerService, PregnancyTrackerService>();
             service.AddScoped<IMessageRepository, MessageRepository>();
-            service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
+        
             service.AddScoped<ISupabaseAdminService, SupabaseAdminService>();
-            service.AddScoped<IReminderJob, AppointmentReminderJob>();
+         
             service.AddScoped<IVoiceUploadService, VoiceUploadService>();
+
+
+
+      
+            service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
+            service.AddScoped<IInAppNotificationService, InAppNotificationService>();
+            service.AddScoped<IReminderJob, AppointmentReminderJob>();
+            //service.AddScoped<SignalRNotificationGateway, >();
             //service.AddHostedService<PrenatalReminderScheduler>();
 
 

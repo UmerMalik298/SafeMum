@@ -9,22 +9,24 @@ using Microsoft.Extensions.Logging;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.AppNotification;
 
+using Supabase.Postgrest;
+using System.Text.Json;
 
 namespace SafeMum.Infrastructure.Services
 {
     public class InAppNotificationService : IInAppNotificationService
     {
         private readonly Supabase.Client _client;
-        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly INotificationGateway _gateway;
         private readonly ILogger<InAppNotificationService> _logger;
 
         public InAppNotificationService(
             ISupabaseClientFactory clientFactory,
-            IHubContext<NotificationHub> hubContext,
+            INotificationGateway gateway,
             ILogger<InAppNotificationService> logger)
         {
             _client = clientFactory.GetClient();
-            _hubContext = hubContext;
+            _gateway = gateway;
             _logger = logger;
         }
 
@@ -46,8 +48,7 @@ namespace SafeMum.Infrastructure.Services
 
                 await _client.From<InAppNotification>().Insert(notification);
 
-                // Send real-time notification via SignalR
-                await _hubContext.Clients.User(userId.ToString()).SendAsync("NewNotification", new
+                await _gateway.SendToUserAsync(userId, "NewNotification", new
                 {
                     notification.Id,
                     notification.Title,
@@ -58,12 +59,12 @@ namespace SafeMum.Infrastructure.Services
                     Data = data
                 });
 
-                _logger.LogInformation($"In-app notification created for user {userId}: {title}");
+                _logger.LogInformation("In-app notification created for user {UserId}: {Title}", userId, title);
                 return notification.Id;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error creating in-app notification: {ex.Message}");
+                _logger.LogError(ex, "Error creating in-app notification");
                 throw;
             }
         }
@@ -72,18 +73,18 @@ namespace SafeMum.Infrastructure.Services
         {
             try
             {
-                var notifications = await _client
+                var res = await _client
                     .From<InAppNotification>()
-                    .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
-                    .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Filter("userid", Constants.Operator.Equals, userId.ToString())
+                    .Order("created_at", Constants.Ordering.Descending)
                     .Range((page - 1) * pageSize, page * pageSize - 1)
                     .Get();
 
-                return notifications.Models;
+                return res.Models;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error getting notifications for user {userId}: {ex.Message}");
+                _logger.LogError(ex, "Error getting notifications for user {UserId}", userId);
                 return new List<InAppNotification>();
             }
         }
@@ -92,31 +93,24 @@ namespace SafeMum.Infrastructure.Services
         {
             try
             {
-                var notification = new InAppNotification
-                {
-                    Id = notificationId,
-                    IsRead = true,
-                    ReadAt = DateTime.UtcNow
-                };
-
-                var result = await _client
+                var res = await _client
                     .From<InAppNotification>()
-                    .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, notificationId.ToString())
-                    .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
-                    .Update(notification);
+                    .Filter("id", Constants.Operator.Equals, notificationId.ToString())
+                    .Filter("user_id", Constants.Operator.Equals, userId.ToString())   // match your actual column name
+                    .Set(x => x.IsRead, true)                                          // <-- lambda
+                    .Set(x => x.ReadAt, DateTime.UtcNow)                               // <-- lambda
+                    .Update();
 
-                if (result.Models.Any())
+                if (res.Models.Any())
                 {
-                    // Notify client about read status change
-                    await _hubContext.Clients.User(userId.ToString()).SendAsync("NotificationRead", notificationId);
+                    await _gateway.SendToUserAsync(userId, "NotificationRead", notificationId);
                     return true;
                 }
-
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error marking notification as read: {ex.Message}");
+                _logger.LogError(ex, "Error marking notification as read");
                 return false;
             }
         }
@@ -125,25 +119,20 @@ namespace SafeMum.Infrastructure.Services
         {
             try
             {
-                var update = new Dictionary<string, object>
-                {
-                    ["is_read"] = true,
-                    ["read_at"] = DateTime.UtcNow
-                };
-
                 await _client
                     .From<InAppNotification>()
-                    .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
-                    .Filter("is_read", Supabase.Postgrest.Constants.Operator.Equals, "false")
-                    .Update(update);
+                    .Filter("user_id", Constants.Operator.Equals, userId.ToString())    // match your actual column name
+                    .Filter("is_read", Constants.Operator.Equals, "false")
+                    .Set(x => x.IsRead, true)                                          // <-- lambda
+                    .Set(x => x.ReadAt, DateTime.UtcNow)                               // <-- lambda
+                    .Update();
 
-                // Notify client about all read
-                await _hubContext.Clients.User(userId.ToString()).SendAsync("AllNotificationsRead");
+                await _gateway.SendToUserAsync(userId, "AllNotificationsRead", new { });
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error marking all notifications as read: {ex.Message}");
+                _logger.LogError(ex, "Error marking all notifications as read");
                 return false;
             }
         }
@@ -152,17 +141,17 @@ namespace SafeMum.Infrastructure.Services
         {
             try
             {
-                var notifications = await _client
+                var res = await _client
                     .From<InAppNotification>()
-                    .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
-                    .Filter("is_read", Supabase.Postgrest.Constants.Operator.Equals, "false")
+                    .Filter("userid", Constants.Operator.Equals, userId.ToString())
+                    .Filter("is_read", Constants.Operator.Equals, "false")
                     .Get();
 
-                return notifications.Models.Count;
+                return res.Models.Count;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error getting unread count: {ex.Message}");
+                _logger.LogError(ex, "Error getting unread count");
                 return 0;
             }
         }
@@ -173,17 +162,16 @@ namespace SafeMum.Infrastructure.Services
             {
                 await _client
                     .From<InAppNotification>()
-                    .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, notificationId.ToString())
-                    .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
+                    .Filter("id", Constants.Operator.Equals, notificationId.ToString())
+                    .Filter("userid", Constants.Operator.Equals, userId.ToString())
                     .Delete();
 
-                // Notify client about deletion
-                await _hubContext.Clients.User(userId.ToString()).SendAsync("NotificationDeleted", notificationId);
+                await _gateway.SendToUserAsync(userId, "NotificationDeleted", notificationId);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error deleting notification: {ex.Message}");
+                _logger.LogError(ex, "Error deleting notification");
                 return false;
             }
         }
