@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SafeMum.Application\SafeMum.Application.csproj" />
+	  
     <ProjectReference Include="..\SafeMum.Domain\SafeMum.Domain.csproj" />
   </ItemGroup>
 

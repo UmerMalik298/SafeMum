@@ -1,19 +1,23 @@
-﻿using System.Text;
+﻿using Hangfire;
+using Hangfire.Common;
+
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
-using SafeMum.API.EndPoints;
-using SafeMum.Application.Features.Users.ForgotPassword;
-using SafeMum.Infrastructure.Configuration;
-
-
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver.Core.Configuration;
+using SafeMum.API.EndPoints;
+
+
 using SafeMum.Application.Common.Exceptions;
-using System.Text.Json;
+using SafeMum.Application.Features.InAppNotification.MarkNotificationRead;
+using SafeMum.Application.Features.Users.ForgotPassword;
 using SafeMum.Application.Hubs;
-using Hangfire;
-using Hangfire.MemoryStorage;
 using SafeMum.Application.Interfaces;
+using SafeMum.Infrastructure.Configuration;
+using System.Text;
+using System.Text.Json;
 
 
 
@@ -26,6 +30,10 @@ builder.WebHost.UseUrls($"http://*:{port}");
 // Register services
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddScoped<INotificationGateway, SafeMum.API.Hubs.SignalRNotificationGateway>();
+
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SafeMum API", Version = "v1" });
@@ -67,26 +75,33 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 
 
-builder.Services.AddHangfire(config =>
-    config.UseMemoryStorage());
+
+
+
+var hfConn = builder.Configuration.GetConnectionString("HangfireConnection");
+
+builder.Services.AddHangfire(cfg =>
+{
+    cfg.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+       .UseSimpleAssemblyNameTypeSerializer()
+       .UseRecommendedSerializerSettings()
+       .UsePostgreSqlStorage(hfConn, new PostgreSqlStorageOptions
+       {
+           SchemaName = "hangfire",
+           PrepareSchemaIfNecessary = true,
+           DistributedLockTimeout = TimeSpan.FromMinutes(3) // increased lock timeout
+       });
+});
 
 builder.Services.AddHangfireServer();
 
-var serviceKey = builder.Configuration["Supabase:ServiceRoleKey"];
-Console.WriteLine(serviceKey);
 
 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblyContaining<MarkNotificationReadHandler>());
+
+// ✅ Build the app (after all services are registered)
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var jobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-    var reminderJob = scope.ServiceProvider.GetRequiredService<IReminderJob>();
-
-    jobManager.AddOrUpdate(
-        "appointment-reminder",
-        () => reminderJob.ExecuteAsync(),
-        Cron.Daily);
-}
 // Heroku HTTPS redirection & headers
 if (!app.Environment.IsDevelopment())
 {
@@ -128,6 +143,8 @@ app.MapGet("/", () => Results.Json(new
     timestamp = DateTime.UtcNow
 }));
 app.MapHub<ChatHub>("/chatHub");
+app.MapHub<SafeMum.API.Hubs.SafeMum.API.Hubs.NotificationHub>("/notificationHub");
+
 app.UseStaticFiles();
 app.UseDefaultFiles();
 

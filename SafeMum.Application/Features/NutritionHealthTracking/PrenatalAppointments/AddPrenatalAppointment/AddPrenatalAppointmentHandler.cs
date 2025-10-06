@@ -16,51 +16,99 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
 {
     public class AddPrenatalAppointmentHandler : IRequestHandler<AddPrenatalAppointmentRequest, Result>
     {
-
         private readonly Supabase.Client _client;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IBackgroundJobClient _backgroundJobs;
-
-        private readonly IPushNotificationService _notificationService;
+        private readonly IPushNotificationService _notificationService; // not used here, but kept if you're injecting it
         private readonly IReminderJob _reminderJob;
+        private readonly IInAppNotificationService _inAppNotificationService;
 
-
-
-        public AddPrenatalAppointmentHandler(ISupabaseClientFactory clientFactory, IHttpContextAccessor httpContextAccessor, IPushNotificationService notificationService, IBackgroundJobClient backgroundJobs, IReminderJob reminderJob)
+        public AddPrenatalAppointmentHandler(
+            ISupabaseClientFactory clientFactory,
+            IHttpContextAccessor httpContextAccessor,
+            IPushNotificationService notificationService,
+            IBackgroundJobClient backgroundJobs,
+            IReminderJob reminderJob,
+            IInAppNotificationService inAppNotificationService)
         {
             _client = clientFactory.GetClient();
             _httpContextAccessor = httpContextAccessor;
             _notificationService = notificationService;
             _backgroundJobs = backgroundJobs;
             _reminderJob = reminderJob;
+            _inAppNotificationService = inAppNotificationService;
         }
+
         public async Task<Result> Handle(AddPrenatalAppointmentRequest request, CancellationToken cancellationToken)
         {
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userid = Guid.Parse(userId);
+            // 1) Resolve user id from auth
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim))
+                return Result.Failure("User not authenticated.");
 
-            // Combine date and time
-            var appointmentDateTime = request.AppointmentDate.Date + request.AppointmentTime;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Result.Failure("Invalid user id.");
 
-            var prenatalAppoint = new PrenatalAppointment
+            // 2) Combine date & time, normalize to UTC for storage & scheduling
+            var localCombined = request.AppointmentDate.Date + request.AppointmentTime;
+            var localDateTime = DateTime.SpecifyKind(localCombined, DateTimeKind.Local);
+            var appointmentUtc = localDateTime.ToUniversalTime();
+
+            // 3) Create & save appointment (storing UTC is recommended)
+            var appt = new PrenatalAppointment
             {
                 Id = Guid.NewGuid(),
-                UserId = userid,
+                UserId = userId,
                 DoctorName = request.DoctorName,
-                HospitalNamae = request.HospitalNamae,
-                AppointmentDate = appointmentDateTime,  // Store full datetime
-                Location = request.Location,
+                HospitalNamae = request.HospitalNamae,          // consider renaming to HospitalName later
+                AppointmentDate = appointmentUtc,               // store UTC
+                Location = request.Location
             };
 
-            await _client.From<PrenatalAppointment>().Insert(prenatalAppoint);
+            await _client.From<PrenatalAppointment>().Insert(appt);
 
-            var jobTime = prenatalAppoint.AppointmentDate.AddMinutes(-3);
-            _backgroundJobs.Schedule<AppointmentReminderJob>(
-                job => job.SendAppointmentRemindersAsync(prenatalAppoint.Id),
-                jobTime
+            // 4) In-app notification (DB + SignalR broadcast via your service/gateway)
+            await _inAppNotificationService.CreateNotificationAsync(
+                userId,
+                "Appointment Scheduled",
+                $"Your appointment with Dr. {request.DoctorName} has been scheduled for {localDateTime:MMM dd, yyyy 'at' h:mm tt}.",
+                "appointment",
+                new { appointmentId = appt.Id }
             );
+
+            // 5) Schedule reminders via Hangfire on the IReminderJob interface
+            var nowUtc = DateTimeOffset.UtcNow;
+
+            var at24h = new DateTimeOffset(appointmentUtc.AddHours(-24), TimeSpan.Zero);
+            var at1h = new DateTimeOffset(appointmentUtc.AddHours(-1), TimeSpan.Zero);
+            var at15m = new DateTimeOffset(appointmentUtc.AddMinutes(-15), TimeSpan.Zero);
+
+            if (at24h > nowUtc)
+            {
+                _backgroundJobs.Schedule<IReminderJob>(
+                    job => job.Send24HourReminderAsync(appt.Id),
+                    at24h
+                );
+            }
+
+            if (at1h > nowUtc)
+            {
+                _backgroundJobs.Schedule<IReminderJob>(
+                    job => job.Send1HourReminderAsync(appt.Id),
+                    at1h
+                );
+            }
+
+            if (at15m > nowUtc)
+            {
+                _backgroundJobs.Schedule<IReminderJob>(
+                    job => job.Send15MinuteReminderAsync(appt.Id),
+                    at15m
+                );
+            }
 
             return Result.Success();
         }
     }
 }
+

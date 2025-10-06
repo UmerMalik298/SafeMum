@@ -9,6 +9,6 @@ namespace SafeMum.Application.Interfaces
     public interface IPushNotificationService
     {
 
-        Task SendPushNotification(string deviceToken, string title, string body);
+        Task SendPushNotification(string deviceToken, string title, string body, object data = null);
     }
 }
