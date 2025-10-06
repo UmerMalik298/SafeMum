@@ -17,37 +17,54 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.WaterIntake.AddWa
     {
         private readonly Supabase.Client _client;
         private readonly IHttpContextAccessor _contextAccessor;
-        public AddWaterIntakeHandler(ISupabaseClientFactory clientFactory, IHttpContextAccessor contextAccessor)
+        private readonly IInAppNotificationService _inAppNotificationService;
+
+        public AddWaterIntakeHandler(
+            ISupabaseClientFactory clientFactory,
+            IHttpContextAccessor contextAccessor,
+            IInAppNotificationService inAppNotificationService)
         {
             _client = clientFactory.GetClient();
             _contextAccessor = contextAccessor;
+            _inAppNotificationService = inAppNotificationService;
         }
+
         public async Task<Result> Handle(AddWaterIntakeRequest request, CancellationToken cancellationToken)
         {
-            var userId = _contextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdStr = _contextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdStr))
+                return Result.Failure("Unauthorized.");
+
+            var userId = Guid.Parse(userIdStr);
 
             var twentyFourHoursAgo = DateTime.UtcNow.AddHours(-24);
 
-           var  userid = Guid.Parse(userId);
-
             var existingLog = await _client
                 .From<WaterIntakeLog>()
-                .Where(x => x.UserId == userid && x.ConsumedAt >= twentyFourHoursAgo)
+                .Where(x => x.UserId == userId && x.ConsumedAt >= twentyFourHoursAgo)
                 .Single();
 
             if (existingLog != null)
-                return Result.Failure("You have already added a water intake log in the last 24 hours.");
+                return Result.Failure("You have already logged water intake in the last 24 hours.");
 
-
-            var result = new WaterIntakeLog
+            var log = new WaterIntakeLog
             {
-                Id = new Guid(),
-                UserId = Guid.Parse(userId),
+                Id = Guid.NewGuid(),
+                UserId = userId,
                 AmountInMl = request.AmountInMl,
-                ConsumedAt = DateTime.UtcNow,            
+                ConsumedAt = DateTime.UtcNow,
             };
-            await _client.From<WaterIntakeLog>().Insert(result);
 
+            await _client.From<WaterIntakeLog>().Insert(log);
+
+           
+            await _inAppNotificationService.CreateNotificationAsync(
+                userId,
+                "Water Intake Logged",
+                $"You logged {request.AmountInMl}ml of water today. Stay hydrated 💧",
+                "water",
+                new { intakeId = log.Id }
+            );
 
             return Result.Success();
         }
