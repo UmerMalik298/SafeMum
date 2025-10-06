@@ -56,7 +56,8 @@ namespace SafeMum.Infrastructure.Services
                     notification.Type,
                     notification.CreatedAt,
                     notification.IsRead,
-                    Data = data
+                    Data = data,
+
                 });
 
                 _logger.LogInformation("In-app notification created for user {UserId}: {Title}", userId, title);
@@ -76,7 +77,7 @@ namespace SafeMum.Infrastructure.Services
                 var res = await _client
                     .From<InAppNotification>()
                     .Filter("userid", Constants.Operator.Equals, userId.ToString())
-                    .Order("created_at", Constants.Ordering.Descending)
+                    .Order("createdat", Constants.Ordering.Descending)
                     .Range((page - 1) * pageSize, page * pageSize - 1)
                     .Get();
 
@@ -96,7 +97,7 @@ namespace SafeMum.Infrastructure.Services
                 var res = await _client
                     .From<InAppNotification>()
                     .Filter("id", Constants.Operator.Equals, notificationId.ToString())
-                    .Filter("user_id", Constants.Operator.Equals, userId.ToString())   // match your actual column name
+                    .Filter("userid", Constants.Operator.Equals, userId.ToString())   // match your actual column name
                     .Set(x => x.IsRead, true)                                          // <-- lambda
                     .Set(x => x.ReadAt, DateTime.UtcNow)                               // <-- lambda
                     .Update();
@@ -121,8 +122,8 @@ namespace SafeMum.Infrastructure.Services
             {
                 await _client
                     .From<InAppNotification>()
-                    .Filter("user_id", Constants.Operator.Equals, userId.ToString())    // match your actual column name
-                    .Filter("is_read", Constants.Operator.Equals, "false")
+                    .Filter("userid", Constants.Operator.Equals, userId.ToString())    // match your actual column name
+                    .Filter("isread", Constants.Operator.Equals, "false")
                     .Set(x => x.IsRead, true)                                          // <-- lambda
                     .Set(x => x.ReadAt, DateTime.UtcNow)                               // <-- lambda
                     .Update();
@@ -144,7 +145,7 @@ namespace SafeMum.Infrastructure.Services
                 var res = await _client
                     .From<InAppNotification>()
                     .Filter("userid", Constants.Operator.Equals, userId.ToString())
-                    .Filter("is_read", Constants.Operator.Equals, "false")
+                    .Filter("isread", Constants.Operator.Equals, "false")
                     .Get();
 
                 return res.Models.Count;

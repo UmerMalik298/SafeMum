@@ -8,10 +8,10 @@ using Supabase.Postgrest.Attributes;
 
 namespace SafeMum.Domain.Entities.AppNotification
 {
+    [Table("inappnotification")]
     public class InAppNotification : BaseEntity
     {
-
-        [Column("user_id")]
+        [Column("userid")]
         public Guid UserId { get; set; }
 
         [Column("title")]
@@ -23,16 +23,13 @@ namespace SafeMum.Domain.Entities.AppNotification
         [Column("type")]
         public string Type { get; set; } // appointment, reminder, general
 
-        [Column("is_read")]
+        [Column("isread")]
         public bool IsRead { get; set; }
 
         [Column("data")]
         public string Data { get; set; } // JSON string
 
-        [Column("read_at")]
+        [Column("readat")]
         public DateTime? ReadAt { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
     }
 }

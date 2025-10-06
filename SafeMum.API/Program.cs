@@ -8,9 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver.Core.Configuration;
 using SafeMum.API.EndPoints;
-using SafeMum.API.Hubs;
+
 
 using SafeMum.Application.Common.Exceptions;
+using SafeMum.Application.Features.InAppNotification.MarkNotificationRead;
 using SafeMum.Application.Features.Users.ForgotPassword;
 using SafeMum.Application.Hubs;
 using SafeMum.Application.Interfaces;
@@ -30,7 +31,9 @@ builder.WebHost.UseUrls($"http://*:{port}");
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddScoped<INotificationGateway, SignalRNotificationGateway>();
+builder.Services.AddScoped<INotificationGateway, SafeMum.API.Hubs.SignalRNotificationGateway>();
+
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SafeMum API", Version = "v1" });
@@ -76,6 +79,7 @@ builder.Services.AddHttpContextAccessor();
 
 
 var hfConn = builder.Configuration.GetConnectionString("HangfireConnection");
+
 builder.Services.AddHangfire(cfg =>
 {
     cfg.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
@@ -85,23 +89,19 @@ builder.Services.AddHangfire(cfg =>
        {
            SchemaName = "hangfire",
            PrepareSchemaIfNecessary = true,
-           DistributedLockTimeout = TimeSpan.FromSeconds(30)
+           DistributedLockTimeout = TimeSpan.FromMinutes(3) // increased lock timeout
        });
 });
-builder.Services.AddHangfireServer();
-var app = builder.Build();
-var jobs = app.Services.GetRequiredService<IRecurringJobManager>();
-jobs.AddOrUpdate(
-    "appointment-reminder",
-    Job.FromExpression<IReminderJob>(j => j.ExecuteAsync()),
-    Cron.Daily(), // ✅ must call the method to get the string
-    new RecurringJobOptions
-    {
-        TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Karachi"),
-        QueueName = "default"
-    }
-);
 
+builder.Services.AddHangfireServer();
+
+
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblyContaining<MarkNotificationReadHandler>());
+
+// ✅ Build the app (after all services are registered)
+var app = builder.Build();
 // Heroku HTTPS redirection & headers
 if (!app.Environment.IsDevelopment())
 {

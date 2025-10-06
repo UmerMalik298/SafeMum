@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SafeMum.Application.Features.InAppNotification.MarkNotificationRead
 {
-    public class MarkNotificationReadHandler : IRequestHandler<MarkNotificationReadRequest, IResult>
+    public class MarkNotificationReadHandler : IRequestHandler<MarkNotificationReadRequest, Result>
     {
         private readonly IInAppNotificationService _service;
         private readonly IHttpContextAccessor _http;
@@ -27,7 +27,7 @@ namespace SafeMum.Application.Features.InAppNotification.MarkNotificationRead
             _http = http;
             _logger = logger;
         }
-        public async Task<IResult> Handle(MarkNotificationReadRequest request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(MarkNotificationReadRequest request, CancellationToken cancellationToken)
         {
             try
             {
