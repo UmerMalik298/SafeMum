@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SafeMum.Application.Features.InAppNotification.GetUnreadCount
 {
-    public class GetUnreadCountHandler : IRequestHandler<GetUnreadCountRequest, Result<int>>
+    public class GetUnreadCountHandler : IRequestHandler<GetUnreadCountRequest, int>
     {
         private readonly IInAppNotificationService _service;
         private readonly IHttpContextAccessor _http;
@@ -27,22 +27,17 @@ namespace SafeMum.Application.Features.InAppNotification.GetUnreadCount
             _http = http;
             _logger = logger;
         }
-        public async Task<Result<int>> Handle(GetUnreadCountRequest request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var idStr = _http.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrWhiteSpace(idStr)) return Result.Failure<int>("Unauthorised.");
-                var userId = Guid.Parse(idStr);
 
-                var count = await _service.GetUnreadCountAsync(userId);
-                return Result.Success(count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetUnreadCount failed");
-                return Result.Failure<int>("Failed to get unread count.");
-            }
+        public async Task<int> Handle(GetUnreadCountRequest request, CancellationToken cancellationToken)
+        {
+            var idStr = _http.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(idStr))
+                throw new UnauthorizedAccessException("Unauthorised.");
+
+            var userId = Guid.Parse(idStr);
+            var count = await _service.GetUnreadCountAsync(userId);
+            return count;
         }
     }
 }
+

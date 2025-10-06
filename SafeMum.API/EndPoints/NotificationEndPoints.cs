@@ -39,10 +39,9 @@ namespace SafeMum.API.EndPoints
             // List (paged)
             group.MapGet("/", async (int page, int pageSize, ISender sender) =>
             {
-                var result = await sender.Send(new GetAllInAppNotificationsRequest { Page = page, PageSize = pageSize });
-                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+                var list = await sender.Send(new GetAllInAppNotificationsRequest { Page = page, PageSize = pageSize });
+                return Results.Ok(list);   // ✅ no .IsSuccess on a List<>
             });
-
             // Mark one read
             group.MapPatch("/{id:guid}/read", async (Guid id, ISender sender) =>
             {
@@ -60,8 +59,8 @@ namespace SafeMum.API.EndPoints
             // Unread count
             group.MapGet("/unread-count", async (ISender sender) =>
             {
-                var result = await sender.Send(new GetUnreadCountRequest());
-                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+                var count = await sender.Send(new GetUnreadCountRequest());
+                return Results.Ok(new { count });
             });
 
             // Delete
