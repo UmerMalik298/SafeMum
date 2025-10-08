@@ -24,5 +24,12 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
         public List<string> Symptoms { get; set; }
 
         public int AmountInMl { get; set; }
+
+
+        public string? NameUrdu { get; set; }
+        public string? RecommendedActionsUrdu { get; set; }
+        public List<string> SymptomsUrdu { get; set; } = new();
+      
+        public string? CurrentWeekUrduText { get; set; }
     }
 }

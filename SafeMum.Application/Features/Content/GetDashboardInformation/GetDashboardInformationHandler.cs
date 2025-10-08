@@ -20,10 +20,12 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
     {
         private readonly Supabase.Client _client;
         private readonly IPregnancyTrackerService _pregnancyTrackerService;
-        public GetDashboardInformationHandler(ISupabaseClientFactory clientFactory, IPregnancyTrackerService pregnancyTrackerService)
+        private readonly ITranslationService _translationService;
+        public GetDashboardInformationHandler(ISupabaseClientFactory clientFactory, IPregnancyTrackerService pregnancyTrackerService, ITranslationService translationService)
         {
             _client = clientFactory.GetClient();
             _pregnancyTrackerService = pregnancyTrackerService;
+            _translationService = translationService;
         }
         public async Task<GetDashboardInformationResponse> Handle(GetDashboardInformationRequest request, CancellationToken cancellationToken)
         {
@@ -51,6 +53,31 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
             var profile = await _client.From<WeeklyPregnancyProfile>().Where(x => x.WeekNumber == currentWeek).Single();
             var waterintake = await _client.From<WaterIntakeLog>().Where(x => x.UserId == request.Id).Single();
 
+
+
+         
+            var symptoms = contentItems?.tags ?? new List<string>();
+
+           
+            string? nameUrdu = null;
+            if (!string.IsNullOrWhiteSpace(UserId.FirstName))
+                nameUrdu = await _translationService.TranslateToUrduAsync(UserId.FirstName);
+
+            
+            string? recommendedUrdu = null;
+            if (!string.IsNullOrWhiteSpace(profile?.RecommendedActions))
+                recommendedUrdu = await _translationService.TranslateToUrduAsync(profile.RecommendedActions);
+
+            
+            List<string> symptomsUrdu = new();
+            if (symptoms.Count > 0)
+            {
+                var translated = await Task.WhenAll(symptoms.Select(s => _translationService.TranslateToUrduAsync(s)));
+                symptomsUrdu = translated.ToList();
+            }
+
+            
+            string? currentWeekUrduText = $"ہفتہ {currentWeek}";
             return new GetDashboardInformationResponse
             {
                 Name = UserId.FirstName,
@@ -60,6 +87,11 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
                 Symptoms = contentItems.tags,
                 RecommendedActions = profile.RecommendedActions,
                 AmountInMl = waterintake.AmountInMl,
+
+                NameUrdu = nameUrdu,
+                RecommendedActionsUrdu = recommendedUrdu,
+                SymptomsUrdu = symptomsUrdu,
+                CurrentWeekUrduText = currentWeekUrduText
 
 
             };
