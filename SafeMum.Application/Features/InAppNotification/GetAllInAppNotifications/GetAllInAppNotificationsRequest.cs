@@ -17,5 +17,6 @@ namespace SafeMum.Application.Features.InAppNotification.GetAllInAppNotification
     {
         public string Title { get; set; } = default!;
         public string Message { get; set; } = default!;
+        public Guid Id { get; set; }
     }
 }

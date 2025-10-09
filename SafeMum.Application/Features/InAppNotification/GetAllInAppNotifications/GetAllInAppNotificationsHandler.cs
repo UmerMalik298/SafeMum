@@ -46,7 +46,8 @@ namespace SafeMum.Application.Features.InAppNotification.GetAllInAppNotification
                 .Select(n => new GetAllInAppNotificationsResponse
                 {
                     Title = n.Title,
-                    Message = n.Message
+                    Message = n.Message,
+                    Id = n.Id,
                 })
                 .ToList();
 
