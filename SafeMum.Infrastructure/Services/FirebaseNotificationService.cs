@@ -13,112 +13,37 @@ using SafeMum.Application.Interfaces;
 
 namespace SafeMum.Infrastructure.Services
 {
-    public class FirebaseNotificationService : IPushNotificationService, IDisposable
+    public class NodePushNotificationService : IPushNotificationService
     {
         private readonly HttpClient _httpClient;
-        private readonly GoogleCredential _googleCredential;
-        private readonly string _projectId;
-        private readonly ILogger<FirebaseNotificationService> _logger;
-        private string _cachedAccessToken;
-        private DateTime _tokenExpiry;
+        private readonly IConfiguration _config;
 
-        public FirebaseNotificationService(IConfiguration config, ILogger<FirebaseNotificationService> logger)
+        public NodePushNotificationService(IConfiguration config)
         {
             _httpClient = new HttpClient();
-            _projectId = config["Firebase:ProjectId"];
-            _logger = logger;
-            _googleCredential = GoogleCredential
-                .FromFile(config["Firebase:ServiceAccountFile"])
-                .CreateScoped("https://www.googleapis.com/auth/firebase.messaging");
+            _config = config;
         }
 
         public async Task SendPushNotification(string deviceToken, string title, string body, object data = null)
         {
-            try
+            var payload = new
             {
-                _logger.LogInformation($"Sending notification to token ending in ...{deviceToken.Substring(deviceToken.Length - 8)}");
+                deviceToken,
+                title,
+                body,
+                data
+            };
 
-                // Get OAuth2 access token
-                var accessToken = await GetAccessTokenAsync();
-                var request = new HttpRequestMessage(
-                    HttpMethod.Post,
-                    $"https://fcm.googleapis.com/v1/projects/{_projectId}/messages:send"
-                );
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Prepare data payload as a dictionary
-                Dictionary<string, string> dataPayload = new();
-                if (data != null)
-                {
-                    // Serialize object to JSON string and add under a key, e.g. "payload"
-                    var json = JsonSerializer.Serialize(data);
-                    dataPayload.Add("payload", json);
-                }
+            var response = await _httpClient.PostAsync($"{_config["NodeApiBaseUrl"]}/api/send-push", content);
 
-                // Create the FCM message body
-                var message = new
-                {
-                    message = new
-                    {
-                        token = deviceToken,
-                        notification = new { title, body },
-                        data = dataPayload,
-                        android = new
-                        {
-                            priority = "high",
-                            notification = new
-                            {
-                                sound = "default",
-                                channel_id = "appointments"
-                            }
-                        },
-                        apns = new
-                        {
-                            payload = new
-                            {
-                                aps = new
-                                {
-                                    alert = new { title, body },
-                                    sound = "default",
-                                    badge = 1
-                                }
-                            }
-                        }
-                    }
-                };
-
-                var jsonPayload = JsonSerializer.Serialize(message, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-                request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
                 var result = await response.Content.ReadAsStringAsync();
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"FCM error: {response.StatusCode} - {result}");
-                    throw new Exception($"FCM error: {response.StatusCode} - {result}");
-                }
-                _logger.LogInformation("Notification sent successfully");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error in SendPushNotification: {ex.Message}");
-                throw;
+                throw new Exception($"Push failed: {result}");
             }
         }
-
-        private async Task<string> GetAccessTokenAsync()
-        {
-            if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow < _tokenExpiry)
-                return _cachedAccessToken;
-
-            _cachedAccessToken = await _googleCredential.UnderlyingCredential.GetAccessTokenForRequestAsync();
-            _tokenExpiry = DateTime.UtcNow.AddMinutes(50);
-            return _cachedAccessToken;
-        }
-
-        public void Dispose() => _httpClient?.Dispose();
     }
 }

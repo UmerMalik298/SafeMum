@@ -38,8 +38,10 @@ namespace SafeMum.Infrastructure.Configuration
 
 
 
-      
-            service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
+
+            //service.AddScoped<IPushNotificationService, FirebaseNotificationService>();
+            service.AddScoped<IPushNotificationService, NodePushNotificationService>();
+
             service.AddScoped<IInAppNotificationService, InAppNotificationService>();
             service.AddScoped<IReminderJob, AppointmentReminderJob>();
             //service.AddScoped<SignalRNotificationGateway, >();
