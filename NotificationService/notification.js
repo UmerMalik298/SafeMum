@@ -1,13 +1,20 @@
+// notification.js
 import express from "express";
 import admin from "firebase-admin";
-import fs from "fs";
 
 const router = express.Router();
 
-// Load service account key (from Firebase)
-const serviceAccount = JSON.parse(
-  fs.readFileSync("firebase-service-account.json", "utf8")
-);
+// Load service account from base64 env var or fallback to file for local dev
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8");
+  serviceAccount = JSON.parse(json);
+} else {
+  // local developer fallback (ONLY if you have the file locally for dev)
+  // Remove or ignore this file in production (add to .gitignore)
+  import fs from "fs";
+  serviceAccount = JSON.parse(fs.readFileSync("firebase-service-account.json", "utf8"));
+}
 
 // Initialize Firebase Admin if not initialized already
 if (!admin.apps.length) {
@@ -16,7 +23,7 @@ if (!admin.apps.length) {
   });
 }
 
-// POST /send-push
+// POST /api/send-push
 router.post("/send-push", async (req, res) => {
   try {
     const { deviceToken, title, body, data } = req.body;
