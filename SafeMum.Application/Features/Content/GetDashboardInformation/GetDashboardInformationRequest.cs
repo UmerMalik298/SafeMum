@@ -10,6 +10,7 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
     public class GetDashboardInformationRequest : IRequest<GetDashboardInformationResponse>
     {
         public Guid Id { get; set; }
+        public string? Language { get; set; } = "en";
     }
     public class GetDashboardInformationResponse
     {

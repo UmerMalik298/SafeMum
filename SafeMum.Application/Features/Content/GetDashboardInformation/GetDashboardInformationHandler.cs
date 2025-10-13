@@ -29,17 +29,28 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
         }
         public async Task<GetDashboardInformationResponse> Handle(GetDashboardInformationRequest request, CancellationToken cancellationToken)
         {
-            var UserId = await _client.From<User>().Where(x => x.Id == request.Id).Single();
-            if (UserId == null)
-                throw new ApplicationException("User May Not Found");
+            await _client.InitializeAsync();
 
+            var user = await _client.From<User>().Where(x => x.Id == request.Id).Single();
+            if (user == null)
+                throw new ApplicationException("User not found");
+
+            // Determine language (default = English)
+            var language = (request.Language?.ToLower() ?? "en") switch
+            {
+                "ur" => "ur",
+                _ => "en"
+            };
+
+            // Fetch content items (for dashboard image and tags)
             var contentItem = await _client
                 .From<contentitem>()
-                .Select("image_url,tags")
+                .Select("image_url, tags, title_en, title_ur, summary_en, summary_ur, text_en, text_ur")
                 .Get();
 
             var contentItems = contentItem.Models.FirstOrDefault();
 
+            // Fetch pregnancy info
             var pregnancyInfo = await _client.From<UserPregnancyInfo>()
                 .Where(x => x.UserId == request.Id).Single()
                 ?? throw new AppException("Pregnancy Data Not Found", 404);
@@ -51,53 +62,55 @@ namespace SafeMum.Application.Features.Content.GetDashboardInformation
                 ? _pregnancyTrackerService.CalculateWeekFromEDD(pregnancyInfo.EDD.Value)
                 : _pregnancyTrackerService.CalculateWeekFromLMP(pregnancyInfo.LMP.Value);
 
+            // Fetch weekly profile
             var profile = await _client.From<WeeklyPregnancyProfile>()
                 .Where(x => x.WeekNumber == currentWeek).Single();
 
-            var waterintake = await _client.From<WaterIntakeLog>()
+            // Fetch water intake
+            var waterIntake = await _client.From<WaterIntakeLog>()
                 .Where(x => x.UserId == request.Id).Single();
 
-            // --------- SAFE LOCALS (fix NREs) ----------
-            var imageUrl = contentItems?.image_url;                        // may be null -> fine
-            var symptoms = contentItems?.tags ?? new List<string>();       // default to empty list
-            var recommended = profile?.RecommendedActions;                 // may be null
-            var amountInMl = waterintake?.AmountInMl ?? 0;                 // default to 0 when no log
-                                                                           // -------------------------------------------
+            // Safe locals
+            var imageUrl = contentItems?.image_url ?? string.Empty;
+            var symptoms = contentItems?.tags ?? new List<string>();
+            var recommended = profile?.RecommendedActions ?? string.Empty;
+            var amountInMl = waterIntake?.AmountInMl ?? 0;
 
-            // Urdu translations (unchanged logic, just use safe locals)
-            string? nameUrdu = null;
-            if (!string.IsNullOrWhiteSpace(UserId.FirstName))
-                nameUrdu = await _translationService.TranslateToUrduAsync(UserId.FirstName);
+            // --- Language based mapping ---
+            string name = user.FirstName ?? string.Empty;
+            string bloodGroup = pregnancyInfo.BloodGroup ?? string.Empty;
+            string recommendedText = recommended;
 
-            string? recommendedUrdu = null;
-            if (!string.IsNullOrWhiteSpace(recommended))
-                recommendedUrdu = await _translationService.TranslateToUrduAsync(recommended);
+            List<string> symptomsList = symptoms ?? new();
 
-            List<string> symptomsUrdu = new();
-            if (symptoms.Count > 0)
+            // If Urdu language selected, try to use Urdu or translate
+            if (language == "ur")
             {
-                var translated = await Task.WhenAll(symptoms.Select(s => _translationService.TranslateToUrduAsync(s)));
-                symptomsUrdu = translated.ToList();
+                // Translate dynamic data
+                name = await _translationService.TranslateToUrduAsync(name);
+                bloodGroup = await _translationService.TranslateToUrduAsync(bloodGroup);
+                recommendedText = await _translationService.TranslateToUrduAsync(recommended);
+
+                var translatedSymptoms = await Task.WhenAll(symptomsList.Select(s => _translationService.TranslateToUrduAsync(s)));
+                symptomsList = translatedSymptoms.ToList();
             }
 
-            string? currentWeekUrduText = $"ہفتہ {currentWeek}";
+            // Urdu week text if needed
+            string currentWeekUrduText = language == "ur" ? $"ہفتہ {currentWeek}" : $"Week {currentWeek}";
 
+            // Return response
             return new GetDashboardInformationResponse
             {
-                Name = UserId.FirstName,
-                BloodGroup = pregnancyInfo.BloodGroup,
+                Name = name,
+                BloodGroup = bloodGroup,
                 CurrentWeek = currentWeek,
-                ImageURL = imageUrl,                 // use safe local
-                Symptoms = symptoms,                 // use safe local
-                RecommendedActions = recommended,    // use safe local
-                AmountInMl = amountInMl,             // FIX: avoid NRE when null
-
-                NameUrdu = nameUrdu,
-                RecommendedActionsUrdu = recommendedUrdu,
-                SymptomsUrdu = symptomsUrdu,
+                ImageURL = imageUrl,
+                Symptoms = symptomsList,
+                RecommendedActions = recommendedText,
+                AmountInMl = amountInMl,
                 CurrentWeekUrduText = currentWeekUrduText
             };
         }
-
     }
+
 }
