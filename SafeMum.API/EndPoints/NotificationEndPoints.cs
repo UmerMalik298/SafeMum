@@ -1,4 +1,6 @@
 ﻿using MediatR;
+using SafeMum.Application.Common;
+using SafeMum.Application.Features.Communication.GetMessagesByUser;
 using SafeMum.Application.Features.Content.CreateContentGroup;
 using SafeMum.Application.Features.DeviceTokens.RegisterDeviceToken;
 using SafeMum.Application.Features.DeviceTokens.TestNotification;
@@ -57,10 +59,11 @@ namespace SafeMum.API.EndPoints
             });
 
             // Unread count
-            group.MapGet("/unread-count", async (ISender sender) =>
+       
+            group.MapGet("/unread-count", async ([AsParameters] GetUnreadCountRequest request, IMediator mediator) =>
             {
-                var count = await sender.Send(new GetUnreadCountRequest());
-                return Results.Ok(new { count });
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
             });
 
             // Delete

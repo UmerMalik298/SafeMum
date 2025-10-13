@@ -8,7 +8,11 @@ using System.Threading.Tasks;
 
 namespace SafeMum.Application.Features.InAppNotification.GetUnreadCount
 {
-    public class GetUnreadCountRequest : IRequest<int>
+    public class GetUnreadCountRequest : IRequest<GetUnreadCountResponse>
     {
+    }
+    public class GetUnreadCountResponse
+    {
+        public int Count { get; set; }
     }
 }

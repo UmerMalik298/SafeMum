@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SafeMum.Application.Features.InAppNotification.GetUnreadCount
 {
-    public class GetUnreadCountHandler : IRequestHandler<GetUnreadCountRequest, int>
+    public class GetUnreadCountHandler : IRequestHandler<GetUnreadCountRequest, GetUnreadCountResponse>
     {
         private readonly IInAppNotificationService _service;
         private readonly IHttpContextAccessor _http;
@@ -28,7 +28,7 @@ namespace SafeMum.Application.Features.InAppNotification.GetUnreadCount
             _logger = logger;
         }
 
-        public async Task<int> Handle(GetUnreadCountRequest request, CancellationToken cancellationToken)
+        public async Task<GetUnreadCountResponse> Handle(GetUnreadCountRequest request, CancellationToken cancellationToken)
         {
             var idStr = _http.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(idStr))
@@ -36,7 +36,10 @@ namespace SafeMum.Application.Features.InAppNotification.GetUnreadCount
 
             var userId = Guid.Parse(idStr);
             var count = await _service.GetUnreadCountAsync(userId);
-            return count;
+            return new GetUnreadCountResponse
+            {
+                Count = count,
+            };
         }
     }
 }
