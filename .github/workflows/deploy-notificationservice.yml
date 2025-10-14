@@ -14,7 +14,7 @@ jobs:
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
-      APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}   # <- notification app
+      APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}
 
     steps:
       - name: Checkout
@@ -26,15 +26,12 @@ jobs:
       - name: Login to Heroku Container Registry
         run: echo "$HEROKU_API_KEY" | docker login -u _ --password-stdin registry.heroku.com
 
-      - name: Show target app (sanity check)
-        run: echo "Deploying to Heroku app: $APP_NAME"
-
-      - name: Build Docker image (from subfolder)
+      - name: Build Docker image (NotificationService context only)
         run: |
           docker build \
             -t registry.heroku.com/$APP_NAME/web \
             -f NotificationService/Dockerfile \
-            NotificationService
+            ./NotificationService
 
       - name: Push image
         run: docker push registry.heroku.com/$APP_NAME/web
