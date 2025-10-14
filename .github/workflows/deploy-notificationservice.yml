@@ -1,0 +1,48 @@
+name: Deploy NotificationService to Heroku (Docker CLI)
+
+on:
+  push:
+    branches: [ "master" ]                 # keep "master" to match your repo
+    paths:
+      - "NotificationService/**"           # only run when Node service changes
+      - ".github/workflows/deploy-notificationservice.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+
+      - name: Login to Heroku Container Registry
+        run: echo "$HEROKU_API_KEY" | docker login -u _ --password-stdin registry.heroku.com
+
+      # Build image from the subfolder using its Dockerfile
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t registry.heroku.com/$HEROKU_APP_NAME/web \
+            -f NotificationService/Dockerfile \
+            NotificationService
+
+      - name: Push image
+        run: docker push registry.heroku.com/$HEROKU_APP_NAME/web
+
+      - name: Ensure stack is container (safe if already set)
+        run: heroku stack:set container -a $HEROKU_APP_NAME
+
+      - name: Release to Heroku
+        run: heroku container:release web -a $HEROKU_APP_NAME
+
+      # Optional smoke test
+      - name: Smoke check /healthz
+        run: curl -fsSL "https://$HEROKU_APP_NAME.herokuapp.com/healthz"
