@@ -2,7 +2,9 @@ name: Deploy to Heroku (Docker CLI)
 
 on:
   push:
-    branches: [ "master" ]   # change to "main" if your default branch is main
+    branches: [ "master" ]
+    paths-ignore:
+      - "NotificationService/**"
   workflow_dispatch:
 
 jobs:
