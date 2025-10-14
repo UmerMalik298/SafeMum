@@ -4,46 +4,33 @@ import fs from "fs";
 
 const router = express.Router();
 
-// Load service account from base64 env var or local file (dev only)
-let serviceAccount;
-if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-  const json = Buffer.from(
-    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
-    "base64"
-  ).toString("utf8");
-  serviceAccount = JSON.parse(json);
-} else if (fs.existsSync("firebase-service-account.json")) {
-  // local developer fallback (do NOT bake this file into prod images)
-  serviceAccount = JSON.parse(
-    fs.readFileSync("firebase-service-account.json", "utf8")
-  );
-} else {
+// --- Load Firebase Admin from a local file ONLY (no env vars) ---
+const CRED_PATH = "firebase-service-account.json";
+if (!fs.existsSync(CRED_PATH)) {
   throw new Error(
-    "No Firebase credentials found. Set FIREBASE_SERVICE_ACCOUNT_BASE64 or provide firebase-service-account.json for local dev."
+    `Missing ${CRED_PATH}. Please keep this file in NotificationService/ and commit it for now (not recommended for prod).`
   );
 }
+const serviceAccount = JSON.parse(fs.readFileSync(CRED_PATH, "utf8"));
 
-// Initialize Firebase Admin once
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
+  console.log("Firebase Admin initialized from local file.");
 }
 
 /**
  * POST /api/send-push
- * Supports either:
+ * body:
  *  - { deviceToken, title, body, data? }
  *  - { deviceTokens: [], title, body, data? }
  */
 router.post("/send-push", async (req, res) => {
   try {
     const { deviceToken, deviceTokens, title, body, data } = req.body;
-
     if (!title || !body || (!deviceToken && !deviceTokens?.length)) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Missing fields" });
+      return res.status(400).json({ success: false, error: "Missing fields" });
     }
 
     const tokens = deviceTokens?.length ? deviceTokens : [deviceToken];
@@ -51,7 +38,9 @@ router.post("/send-push", async (req, res) => {
     const message = {
       tokens,
       notification: { title, body },
-      data: data ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])) : {},
+      data: data
+        ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)]))
+        : {},
       android: {
         priority: "high",
         notification: { sound: "default", channel_id: "appointments" }
@@ -64,12 +53,11 @@ router.post("/send-push", async (req, res) => {
 
     const response = await admin.messaging().sendEachForMulticast(message);
 
-    // Optional: collect invalid tokens for cleanup
     const invalidTokens = [];
     response.responses.forEach((r, idx) => {
       if (!r.success) {
-        const err = r.error?.errorInfo?.message || r.error?.message || "";
-        if (err.includes("UNREGISTERED") || err.includes("NOT_FOUND")) {
+        const msg = r.error?.errorInfo?.message || r.error?.message || "";
+        if (msg.includes("UNREGISTERED") || msg.includes("NOT_FOUND")) {
           invalidTokens.push(tokens[idx]);
         }
       }
