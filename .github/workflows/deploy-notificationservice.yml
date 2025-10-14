@@ -2,9 +2,9 @@ name: Deploy NotificationService to Heroku (Docker CLI)
 
 on:
   push:
-    branches: [ "master" ]                 # keep "master" to match your repo
+    branches: [ "master" ]
     paths:
-      - "NotificationService/**"           # only run when Node service changes
+      - "NotificationService/**"
       - ".github/workflows/deploy-notificationservice.yml"
   workflow_dispatch:
 
@@ -14,7 +14,7 @@ jobs:
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
-      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}
+      APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}   # <- notification app
 
     steps:
       - name: Checkout
@@ -26,23 +26,24 @@ jobs:
       - name: Login to Heroku Container Registry
         run: echo "$HEROKU_API_KEY" | docker login -u _ --password-stdin registry.heroku.com
 
-      # Build image from the subfolder using its Dockerfile
-      - name: Build Docker image
+      - name: Show target app (sanity check)
+        run: echo "Deploying to Heroku app: $APP_NAME"
+
+      - name: Build Docker image (from subfolder)
         run: |
           docker build \
-            -t registry.heroku.com/$HEROKU_APP_NAME/web \
+            -t registry.heroku.com/$APP_NAME/web \
             -f NotificationService/Dockerfile \
             NotificationService
 
       - name: Push image
-        run: docker push registry.heroku.com/$HEROKU_APP_NAME/web
+        run: docker push registry.heroku.com/$APP_NAME/web
 
-      - name: Ensure stack is container (safe if already set)
-        run: heroku stack:set container -a $HEROKU_APP_NAME
+      - name: Ensure stack is container
+        run: heroku stack:set container -a $APP_NAME
 
       - name: Release to Heroku
-        run: heroku container:release web -a $HEROKU_APP_NAME
+        run: heroku container:release web -a $APP_NAME
 
-      # Optional smoke test
       - name: Smoke check /healthz
-        run: curl -fsSL "https://$HEROKU_APP_NAME.herokuapp.com/healthz"
+        run: curl -fsSL "https://$APP_NAME.herokuapp.com/healthz"
