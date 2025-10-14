@@ -2,9 +2,9 @@ name: Deploy NotificationService to Heroku (Docker CLI)
 
 on:
   push:
-    branches: [ "master" ]            # keep "master" to match your repo default
+    branches: [ "master" ]                 # keep "master" to match your repo
     paths:
-      - "NotificationService/**"      # only run when this folder changes
+      - "NotificationService/**"           # only run when Node service changes
       - ".github/workflows/deploy-notificationservice.yml"
   workflow_dispatch:
 
@@ -13,9 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      HEROKU_EMAIL:     ${{ secrets.HEROKU_EMAIL }}
-      # Use a DIFFERENT app name secret than your .NET app to avoid clashes:
-      HEROKU_APP_NAME:  ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}
+      HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}
 
     steps:
       - name: Checkout
@@ -24,13 +23,10 @@ jobs:
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
 
-      - name: Heroku login (CLI)
-        run: heroku auth:token >/dev/null 2>&1 || true
-
       - name: Login to Heroku Container Registry
         run: echo "$HEROKU_API_KEY" | docker login -u _ --password-stdin registry.heroku.com
 
-      # Build *from* the NotificationService subfolder using its Dockerfile
+      # Build image from the subfolder using its Dockerfile
       - name: Build Docker image
         run: |
           docker build \
@@ -47,7 +43,6 @@ jobs:
       - name: Release to Heroku
         run: heroku container:release web -a $HEROKU_APP_NAME
 
-      # optional smoke test
+      # Optional smoke test
       - name: Smoke check /healthz
-        run: |
-          curl -fsSL "https://$HEROKU_APP_NAME.herokuapp.com/healthz"
+        run: curl -fsSL "https://$HEROKU_APP_NAME.herokuapp.com/healthz"
