@@ -84,7 +84,17 @@ namespace SafeMum.Infrastructure.Services
                 {
                     try
                     {
-                        await _notificationService.SendPushNotification(token.Token, title, body);
+                        await _notificationService.SendPushNotification(
+     token.Token,
+     title,
+     body,
+     new
+     {
+         type = "appointment",
+         appointmentId = appointment.Id.ToString()
+     }
+ );
+
                         _logger.LogInformation($"Notification sent successfully to token ending in ...{token.Token.Substring(token.Token.Length - 8)}");
                     }
                     catch (Exception ex)
@@ -175,7 +185,17 @@ namespace SafeMum.Infrastructure.Services
             {
                 try
                 {
-                    await _notificationService.SendPushNotification(token.Token, title, body);
+                    await _notificationService.SendPushNotification(
+    token.Token,
+    title,
+    body,
+    new
+    {
+        type = "appointment",
+        appointmentId = appointment.Id.ToString()
+    }
+);
+
                 }
                 catch (Exception ex)
                 {
