@@ -42,5 +42,20 @@ jobs:
       - name: Release to Heroku
         run: heroku container:release web -a $APP_NAME
 
-      - name: Smoke check /healthz
-        run: curl -fsSL "https://$APP_NAME.herokuapp.com/healthz"
+      # Wait for the dyno to boot before checking /healthz
+      - name: Smoke check /healthz (with retries)
+        run: |
+          set -e
+          echo "Waiting for dyno to become healthy at https://$APP_NAME.herokuapp.com/healthz"
+          for i in $(seq 1 24); do  # ~2 minutes total
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://$APP_NAME.herokuapp.com/healthz")
+            if [ "$code" = "200" ]; then
+              echo "Health check passed (200)."
+              exit 0
+            fi
+            echo "Attempt $i: got HTTP $code, retrying in 5s..."
+            sleep 5
+          done
+          echo "Health check failed after waiting."
+          curl -i "https://$APP_NAME.herokuapp.com/healthz" || true
+          exit 1
