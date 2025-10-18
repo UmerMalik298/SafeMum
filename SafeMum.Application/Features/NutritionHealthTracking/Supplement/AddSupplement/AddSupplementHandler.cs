@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using SafeMum.Application.Common;
 using SafeMum.Application.Interfaces;
 using SafeMum.Domain.Entities.AppNotification;
+using SafeMum.Domain.Entities.Common;
 using SafeMum.Domain.Entities.NutritionHealthTracking;
 using SafeMum.Infrastructure.Services;
 using System;
@@ -22,17 +23,20 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.Supplement.AddSup
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IInAppNotificationService _inAppNotifications;
         private readonly ILogger<AddSupplementHandler> _logger;
+        private readonly IPushNotificationService _notificationService;
 
         public AddSupplementHandler(
             ISupabaseClientFactory clientFactory,
             IHttpContextAccessor contextAccessor,
             IInAppNotificationService inAppNotifications,
-            ILogger<AddSupplementHandler> logger)
+            ILogger<AddSupplementHandler> logger,
+            IPushNotificationService notificationService)
         {
             _client = clientFactory.GetClient();
             _contextAccessor = contextAccessor;
             _inAppNotifications = inAppNotifications;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<Result> Handle(AddSupplementRequest request, CancellationToken cancellationToken)
@@ -73,6 +77,37 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.Supplement.AddSup
                 type: "supplement",
                 data: new { supplementLogId = log.Id, name = request.Name }
             );
+            var tokensRes = await _client
+       .From<DeviceToken>()
+       .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
+       .Get();
+
+            var tokens = tokensRes.Models?
+                .Select(t => t.Token)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToList();
+
+            if (tokens != null && tokens.Any())
+            {
+                var title = "Supplement Logged";
+                var body = $"You took {request.Name} {request.Dosage}.";
+
+                var sendTasks = tokens.Select(token =>
+                    _notificationService.SendPushNotification(
+                        token,
+                        title,
+                        body,
+                        new
+                        {
+                            type = "supplement",
+                            supplementLogId = log.Id.ToString(),
+                            name = request.Name
+                        }
+                    )
+                );
+
+                await Task.WhenAll(sendTasks);
+            }
 
             _logger.LogInformation("Supplement logged and in-app notification created for user {UserId}", userId);
             return Result.Success();

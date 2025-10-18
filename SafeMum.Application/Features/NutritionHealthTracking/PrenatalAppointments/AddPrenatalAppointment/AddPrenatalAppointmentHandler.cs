@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Hangfire;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using SafeMum.Application.Common;
+using SafeMum.Application.Interfaces;
+using SafeMum.Domain.Entities.Common;
+using SafeMum.Domain.Entities.NutritionHealthTracking;
+using SafeMum.Infrastructure.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Hangfire;
-using MediatR;
-using Microsoft.AspNetCore.Http;
-using SafeMum.Application.Common;
-using SafeMum.Application.Interfaces;
-using SafeMum.Domain.Entities.NutritionHealthTracking;
-using SafeMum.Infrastructure.Services;
 
 namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointments.AddPrenatalAppointment
 {
@@ -19,7 +20,7 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
         private readonly Supabase.Client _client;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IBackgroundJobClient _backgroundJobs;
-        private readonly IPushNotificationService _notificationService; // not used here, but kept if you're injecting it
+        private readonly IPushNotificationService _notificationService; 
         private readonly IReminderJob _reminderJob;
         private readonly IInAppNotificationService _inAppNotificationService;
 
@@ -41,7 +42,7 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
 
         public async Task<Result> Handle(AddPrenatalAppointmentRequest request, CancellationToken cancellationToken)
         {
-            // 1) Resolve user id from auth
+            
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(userIdClaim))
                 return Result.Failure("User not authenticated.");
@@ -54,20 +55,19 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
             var localDateTime = DateTime.SpecifyKind(localCombined, DateTimeKind.Local);
             var appointmentUtc = localDateTime.ToUniversalTime();
 
-            // 3) Create & save appointment (storing UTC is recommended)
             var appt = new PrenatalAppointment
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 DoctorName = request.DoctorName,
-                HospitalNamae = request.HospitalNamae,          // consider renaming to HospitalName later
-                AppointmentDate = appointmentUtc,               // store UTC
+                HospitalNamae = request.HospitalNamae,          
+                AppointmentDate = appointmentUtc,              
                 Location = request.Location
             };
 
             await _client.From<PrenatalAppointment>().Insert(appt);
 
-            // 4) In-app notification (DB + SignalR broadcast via your service/gateway)
+           
             await _inAppNotificationService.CreateNotificationAsync(
                 userId,
                 "Appointment Scheduled",
@@ -76,7 +76,32 @@ namespace SafeMum.Application.Features.NutritionHealthTracking.PrenatalAppointme
                 new { appointmentId = appt.Id }
             );
 
-            // 5) Schedule reminders via Hangfire on the IReminderJob interface
+            // get the user's device tokens
+            var tokensRes = await _client
+                .From<DeviceToken>()
+                .Filter("userid", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString())
+                .Get();
+
+            var tokens = tokensRes.Models?.Select(t => t.Token).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+
+            if (tokens != null && tokens.Any())
+            {
+                var title = "Appointment Scheduled";
+                var body = $"Your appointment with Dr. {request.DoctorName} is set for {localDateTime:MMM dd, yyyy 'at' h:mm tt} at {request.HospitalNamae}.";
+
+                
+                var sendTasks = tokens.Select(token =>
+                    _notificationService.SendPushNotification(
+                        token,
+                        title,
+                        body,
+                        new { type = "appointment", appointmentId = appt.Id.ToString() }
+                    )
+                );
+
+                await Task.WhenAll(sendTasks);
+            }
+
             var nowUtc = DateTimeOffset.UtcNow;
 
             var at24h = new DateTimeOffset(appointmentUtc.AddHours(-24), TimeSpan.Zero);

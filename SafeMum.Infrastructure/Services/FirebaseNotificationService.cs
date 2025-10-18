@@ -13,36 +13,50 @@ using SafeMum.Application.Interfaces;
 
 namespace SafeMum.Infrastructure.Services
 {
-    public class NodePushNotificationService : IPushNotificationService
+    namespace SafeMum.Infrastructure.Services
     {
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _config;
-
-        public NodePushNotificationService(IConfiguration config)
+        public class NodePushNotificationService : IPushNotificationService
         {
-            _httpClient = new HttpClient();
-            _config = config;
-        }
+            private readonly HttpClient _httpClient;
+            private readonly IConfiguration _config;
 
-        public async Task SendPushNotification(string deviceToken, string title, string body, object data = null)
-        {
-            var payload = new
+            public NodePushNotificationService(IConfiguration config)
             {
-                deviceToken,
-                title,
-                body,
-                data
-            };
+                _config = config;
+                _httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromSeconds(10)
+                };
+               
+            }
 
-            var json = JsonSerializer.Serialize(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync($"{_config["NodeApiBaseUrl"]}/api/send-push", content);
-
-            if (!response.IsSuccessStatusCode)
+            public async Task SendPushNotification(string deviceToken, string title, string body, object data = null)
             {
+                var payload = new { deviceToken, title, body, data };
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var url = $"{_config["NodeApiBaseUrl"].TrimEnd('/')}/api/send-push";
+
+                var response = await _httpClient.PostAsync(url, content);
                 var result = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Push failed: {result}");
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Push failed: {result}");
+            }
+
+            // Optional: batch
+            public async Task SendPushNotifications(IEnumerable<string> deviceTokens, string title, string body, object data = null)
+            {
+                var payload = new { deviceTokens, title, body, data };
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var url = $"{_config["NodeApiBaseUrl"].TrimEnd('/')}/api/send-push";
+
+                var response = await _httpClient.PostAsync(url, content);
+                var result = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Push failed: {result}");
             }
         }
     }

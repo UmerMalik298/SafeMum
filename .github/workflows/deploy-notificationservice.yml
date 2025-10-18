@@ -1,0 +1,61 @@
+name: Deploy NotificationService to Heroku (Docker CLI)
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "NotificationService/**"
+      - ".github/workflows/deploy-notificationservice.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+      APP_NAME: ${{ secrets.HEROKU_APP_NAME_NOTIFICATION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+
+      - name: Login to Heroku Container Registry
+        run: echo "$HEROKU_API_KEY" | docker login -u _ --password-stdin registry.heroku.com
+
+      - name: Build Docker image (NotificationService context only)
+        run: |
+          docker build \
+            -t registry.heroku.com/$APP_NAME/web \
+            -f NotificationService/Dockerfile \
+            ./NotificationService
+
+      - name: Push image
+        run: docker push registry.heroku.com/$APP_NAME/web
+
+      - name: Ensure stack is container
+        run: heroku stack:set container -a $APP_NAME
+
+      - name: Release to Heroku
+        run: heroku container:release web -a $APP_NAME
+
+      # Wait for the dyno to boot before checking /healthz
+      - name: Smoke check /healthz (with retries)
+        run: |
+          set -e
+          echo "Waiting for dyno to become healthy at https://$APP_NAME.herokuapp.com/healthz"
+          for i in $(seq 1 24); do  # ~2 minutes total
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://$APP_NAME.herokuapp.com/healthz")
+            if [ "$code" = "200" ]; then
+              echo "Health check passed (200)."
+              exit 0
+            fi
+            echo "Attempt $i: got HTTP $code, retrying in 5s..."
+            sleep 5
+          done
+          echo "Health check failed after waiting."
+          curl -i "https://$APP_NAME.herokuapp.com/healthz" || true
+          exit 1

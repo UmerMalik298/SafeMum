@@ -1,52 +1,74 @@
-// notification.js
 import express from "express";
 import admin from "firebase-admin";
+import fs from "fs";
 
 const router = express.Router();
 
-// Load service account from base64 env var or fallback to file for local dev
-let serviceAccount;
-if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-  const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8");
-  serviceAccount = JSON.parse(json);
-} else {
-  // local developer fallback (ONLY if you have the file locally for dev)
-  // Remove or ignore this file in production (add to .gitignore)
-  import fs from "fs";
-  serviceAccount = JSON.parse(fs.readFileSync("firebase-service-account.json", "utf8"));
+// --- Load Firebase Admin from a local file ONLY (no env vars) ---
+const CRED_PATH = "firebase-service-account.json";
+if (!fs.existsSync(CRED_PATH)) {
+  throw new Error(
+    `Missing ${CRED_PATH}. Please keep this file in NotificationService/ and commit it for now (not recommended for prod).`
+  );
 }
+const serviceAccount = JSON.parse(fs.readFileSync(CRED_PATH, "utf8"));
 
-// Initialize Firebase Admin if not initialized already
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
+  console.log("Firebase Admin initialized from local file.");
 }
 
-// POST /api/send-push
+/**
+ * POST /api/send-push
+ * body:
+ *  - { deviceToken, title, body, data? }
+ *  - { deviceTokens: [], title, body, data? }
+ */
 router.post("/send-push", async (req, res) => {
   try {
-    const { deviceToken, title, body, data } = req.body;
-
-    if (!deviceToken || !title || !body) {
+    const { deviceToken, deviceTokens, title, body, data } = req.body;
+    if (!title || !body || (!deviceToken && !deviceTokens?.length)) {
       return res.status(400).json({ success: false, error: "Missing fields" });
     }
 
+    const tokens = deviceTokens?.length ? deviceTokens : [deviceToken];
+
     const message = {
-      token: deviceToken,
+      tokens,
       notification: { title, body },
-      data: data ? data : {},
+      data: data
+        ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)]))
+        : {},
       android: {
         priority: "high",
-        notification: { sound: "default", channel_id: "appointments" },
+        notification: { sound: "default", channel_id: "appointments" }
       },
       apns: {
-        payload: { aps: { alert: { title, body }, sound: "default", badge: 1 } },
-      },
+        headers: { "apns-priority": "10" },
+        payload: { aps: { alert: { title, body }, sound: "default", badge: 1 } }
+      }
     };
 
-    const response = await admin.messaging().send(message);
-    res.json({ success: true, messageId: response });
+    const response = await admin.messaging().sendEachForMulticast(message);
+
+    const invalidTokens = [];
+    response.responses.forEach((r, idx) => {
+      if (!r.success) {
+        const msg = r.error?.errorInfo?.message || r.error?.message || "";
+        if (msg.includes("UNREGISTERED") || msg.includes("NOT_FOUND")) {
+          invalidTokens.push(tokens[idx]);
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      sentCount: response.successCount,
+      failCount: response.failureCount,
+      invalidTokens
+    });
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).json({ success: false, error: error.message });
