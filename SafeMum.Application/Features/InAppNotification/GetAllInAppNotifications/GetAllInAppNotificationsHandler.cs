@@ -36,7 +36,8 @@ namespace SafeMum.Application.Features.InAppNotification.GetAllInAppNotification
             // NOTE: Use the fully-qualified entity type to avoid the namespace collision.
             var res = await _client
                 .From<SafeMum.Domain.Entities.AppNotification.InAppNotification>()
-                .Filter("userid", Constants.Operator.Equals, userId.ToString())       // adjust to "user_id" if that's your column
+                .Filter("userid", Constants.Operator.Equals, userId.ToString())
+                .Filter("isread", Constants.Operator.Equals, false)// adjust to "user_id" if that's your column
                 .Order("created_at", Constants.Ordering.Descending)
                 .Range((request.Page - 1) * request.PageSize, request.Page * request.PageSize - 1)
                 .Get();
