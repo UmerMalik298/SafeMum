@@ -23,7 +23,7 @@ namespace SafeMum.Application.Features.InAppNotification.GetAllInAppNotification
         }
 
         public async Task<List<GetAllInAppNotificationsResponse>> Handle(
-            GetAllInAppNotificationsRequest request, CancellationToken cancellationToken)
+      GetAllInAppNotificationsRequest request, CancellationToken cancellationToken)
         {
             // get current user id from JWT
             var userIdStr = _http.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -33,11 +33,10 @@ namespace SafeMum.Application.Features.InAppNotification.GetAllInAppNotification
             var userId = Guid.Parse(userIdStr);
 
             // Query Supabase table for this user's notifications
-            // NOTE: Use the fully-qualified entity type to avoid the namespace collision.
             var res = await _client
                 .From<SafeMum.Domain.Entities.AppNotification.InAppNotification>()
                 .Filter("userid", Constants.Operator.Equals, userId.ToString())
-                .Filter("isread", Constants.Operator.Equals, false)// adjust to "user_id" if that's your column
+                .Filter("isread", Constants.Operator.Equals, "false") // <-- FIXED: pass as string, not bool
                 .Order("created_at", Constants.Ordering.Descending)
                 .Range((request.Page - 1) * request.PageSize, request.Page * request.PageSize - 1)
                 .Get();
@@ -54,6 +53,7 @@ namespace SafeMum.Application.Features.InAppNotification.GetAllInAppNotification
 
             return list;
         }
-    }
-}
 
+    }
+
+}
