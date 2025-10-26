@@ -1,10 +1,11 @@
 ﻿using MediatR;
-
+using Microsoft.AspNetCore.Mvc;
 using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Features.Users.ForgotPassword;
 using SafeMum.Application.Features.Users.Login;
 using SafeMum.Application.Features.Users.Logout;
 using SafeMum.Application.Features.Users.ResetPassword;
+using SafeMum.Application.Features.Users.UpdateProfile;
 
 namespace SafeMum.API.EndPoints
 {
@@ -42,6 +43,12 @@ namespace SafeMum.API.EndPoints
                 var result = await mediator.Send(request);
                 return Results.Ok(result);
             });
+            group.MapPatch("/update-profile", async ([FromForm] UpdateProfileRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            }).DisableAntiforgery();
+
 
 
 

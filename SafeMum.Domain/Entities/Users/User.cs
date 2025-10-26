@@ -44,5 +44,16 @@ namespace SafeMum.Domain.Entities.Users
 
         [Column("device_token")]
         public string DeviceToken { get; set; }
+
+
+        [Column("profile_url")]
+        public string? ProfileUrl { get; set; }
+
+        [Column("phone_no")]
+        public string? PhoneNo { get; set; }
+
+        [Column("address")]
+        public string? Address { get; set; }
+
     }
 }
