@@ -13,7 +13,7 @@ namespace SafeMum.Domain.Entities.Users
     public class User : BaseEntity
     {
 
-        [Column("id")]
+        [PrimaryKey("id", false)]
         public Guid Id { get; set; }
 
         [Column("email")]
