@@ -34,6 +34,10 @@ namespace SafeMum.Application.Features.Communication.GetUserById
 
                 Name = userId.Model.FirstName,
                 Email = userId.Model.Email,
+                Address = userId.Model.Address,
+                ProfileUrl = userId.Model.ProfileUrl,
+                PhoneNumber = userId.Model.PhoneNo
+
 
             }; 
 
