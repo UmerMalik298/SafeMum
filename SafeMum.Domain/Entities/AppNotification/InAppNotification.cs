@@ -8,7 +8,7 @@ using Supabase.Postgrest.Attributes;
 
 namespace SafeMum.Domain.Entities.AppNotification
 {
-    [Table("inappnotification")]
+    [Table("inappnotification")]    
     public class InAppNotification : BaseEntity
     {
         [Column("userid")]

@@ -21,14 +21,15 @@ namespace SafeMum.Application.Features.Users.CreateUser
         {
             try
             {
-         
+                // Step 1: Auth signup
                 var authResponse = await _client.Auth.SignUp(request.Email, request.Password);
 
                 if (authResponse?.User?.Id == null)
                     return FailedResponse("Authentication failed");
 
-                var userId = Guid.Parse(authResponse.User.Id);
+                Guid userId = Guid.Parse(authResponse.User.Id);
 
+                // Step 2: Create User model
                 var user = new User
                 {
                     Id = userId,
@@ -36,30 +37,34 @@ namespace SafeMum.Application.Features.Users.CreateUser
                     Username = request.Username,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    CreatedAt = DateTime.UtcNow,
                     Role = request.Role ?? "User",
-                    UserType = request.UserType ?? "Visitor"
+                    UserType = request.UserType ?? "Visitor",
+                    DeviceToken = null,
+                    ProfileUrl = null,
+                    PhoneNo = null,
+                    Address = null
                 };
 
+                // Step 3: Insert using model-based Insert
                 try
                 {
                     await _client.From<User>().Insert(user);
                 }
                 catch (Exception dbEx)
                 {
-                   
+                    // rollback auth user
                     await _adminService.DeleteUserAsync(authResponse.User.Id);
                     return FailedResponse($"User creation failed: {dbEx.Message}");
                 }
 
-                // Success
+                // Step 4: Return success response
                 return new RegisterUserResponse
                 {
                     Success = true,
                     UserId = authResponse.User.Id,
                     Email = user.Email,
                     Username = user.Username,
-                    CreatedAt = user.CreatedAt,
+                    CreatedAt = DateTime.UtcNow,
                     UserType = user.UserType
                 };
             }
@@ -77,5 +82,6 @@ namespace SafeMum.Application.Features.Users.CreateUser
             Success = false,
             ErrorMessage = message
         };
+
     }
 }

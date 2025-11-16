@@ -14,6 +14,8 @@ namespace SafeMum.Domain.Entities.Users
     {
 
         [PrimaryKey("id", false)]
+        [Column("id")]
+
         public Guid Id { get; set; }
 
         [Column("email")]
