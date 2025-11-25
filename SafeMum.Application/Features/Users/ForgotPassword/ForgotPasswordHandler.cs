@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MediatR;
+using SafeMum.Application.Interfaces;
+using Supabase.Gotrue;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MediatR;
-using SafeMum.Application.Interfaces;
 
 namespace SafeMum.Application.Features.Users.ForgotPassword
 {
@@ -20,7 +21,15 @@ namespace SafeMum.Application.Features.Users.ForgotPassword
         {
             try
             {
-                await _client.Auth.ResetPasswordForEmail(request.Email);
+                //await _client.Auth.ResetPasswordForEmail(request.Email);
+
+                var options = new ResetPasswordForEmailOptions(request.Email)
+                {
+                    RedirectTo = "safemum://reset-password"
+                    // or "https://your-site.com/reset-password"
+                };
+
+                await _client.Auth.ResetPasswordForEmail(options);
 
                 return new ForgotPasswordResponse
                 {
