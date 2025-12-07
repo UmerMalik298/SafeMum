@@ -26,7 +26,7 @@ namespace SafeMum.Application.Features.Users.ForgotPassword
                 var options = new ResetPasswordForEmailOptions(request.Email)
                 {
                     RedirectTo = "safemum://reset-password"
-                    // or "https://your-site.com/reset-password"
+                   
                 };
 
                 await _client.Auth.ResetPasswordForEmail(options);

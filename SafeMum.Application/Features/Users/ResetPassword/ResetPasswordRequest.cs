@@ -10,8 +10,9 @@ namespace SafeMum.Application.Features.Users.ResetPassword
     public class ResetPasswordRequest : IRequest<ResetPasswordResponse>
     {
         public string NewPassword { get; set; }
+        public string AccessToken { get; set; }  
+        public string RefreshToken { get; set; }
 
-      
     }
 
     public class ResetPasswordResponse
