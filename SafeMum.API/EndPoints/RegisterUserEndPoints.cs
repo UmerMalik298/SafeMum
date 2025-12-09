@@ -39,11 +39,11 @@ namespace SafeMum.API.EndPoints
                 return Results.Ok(result);
             });
 
-            //group.MapGet("/reset-password-redirect", async ([AsParameters] ResetPasswordRedirectRequest request, IMediator mediator) =>
-            //{
-            //    var result = await mediator.Send(request);
-            //    return Results.Ok(result);
-            //});
+            group.MapGet("/reset-password-redirect", async ([AsParameters] ResetPasswordRedirectRequest request, IMediator mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return Results.Ok(result);
+            });
 
             group.MapPut("/reset-password", async (ResetPasswordRequest request, IMediator mediator) =>
             {
