@@ -46,6 +46,26 @@ namespace SafeMum.API.EndPoints
             //    return Results.Content(result.HtmlContent, "text/html");
             //});
 
+            app.MapGet("/api/users/reset-password-redirect", async (
+    IMediator mediator,
+    HttpContext context) =>
+            {
+                // Extract parameters from query string
+                var accessToken = context.Request.Query["access_token"].ToString();
+                var refreshToken = context.Request.Query["refresh_token"].ToString();
+                var expiresAt = context.Request.Query["expires_at"].ToString();
+                var tokenType = context.Request.Query["token_type"].ToString();
+
+                var result = await mediator.Send(new ResetPasswordRedirectRequest
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    ExpiresAt = expiresAt,
+                    TokenType = tokenType
+                });
+
+                return Results.Content(result.HtmlContent, "text/html");
+            });
 
             group.MapPut("/reset-password", async (ResetPasswordRequest request, IMediator mediator) =>
             {

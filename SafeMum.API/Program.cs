@@ -2,7 +2,6 @@
 using Hangfire.Common;
 
 using Hangfire.PostgreSql;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +13,6 @@ using SafeMum.API.EndPoints;
 using SafeMum.Application.Common.Exceptions;
 using SafeMum.Application.Features.InAppNotification.MarkNotificationRead;
 using SafeMum.Application.Features.Users.ForgotPassword;
-using SafeMum.Application.Features.Users.ResetPasswordRedirect;
 using SafeMum.Application.Hubs;
 using SafeMum.Application.Interfaces;
 using SafeMum.Infrastructure.Configuration;
@@ -144,14 +142,6 @@ app.MapGet("/", () => Results.Json(new
     status = "Healthy",
     timestamp = DateTime.UtcNow
 }));
-
-
-app.MapGet("/api/users/reset-password-redirect", async (IMediator mediator) =>
-{
-    var result = await mediator.Send(new ResetPasswordRedirectRequest());
-    return Results.Content(result.HtmlContent, "text/html");
-});
-
 app.MapHub<ChatHub>("/chatHub");
 app.MapHub<SafeMum.API.Hubs.SafeMum.API.Hubs.NotificationHub>("/notificationHub");
 
