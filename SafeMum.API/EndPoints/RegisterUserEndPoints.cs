@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Features.Users.ForgotPassword;
@@ -39,11 +40,12 @@ namespace SafeMum.API.EndPoints
                 return Results.Ok(result);
             });
 
-            group.MapGet("/reset-password-redirect", async ([AsParameters] ResetPasswordRedirectRequest request, IMediator mediator) =>
-            {
-                var result = await mediator.Send(request);
-                return Results.Ok(result);
-            });
+            //app.MapGet("/api/users/reset-password-redirect", async (IMediator mediator) =>
+            //{
+            //    var result = await mediator.Send(new ResetPasswordRedirectRequest());
+            //    return Results.Content(result.HtmlContent, "text/html");
+            //});
+
 
             group.MapPut("/reset-password", async (ResetPasswordRequest request, IMediator mediator) =>
             {
