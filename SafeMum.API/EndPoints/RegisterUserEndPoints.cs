@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using SafeMum.Application.Features.Users.CreateUser;
 using SafeMum.Application.Features.Users.ForgotPassword;
@@ -46,27 +47,57 @@ namespace SafeMum.API.EndPoints
             //    return Results.Content(result.HtmlContent, "text/html");
             //});
 
-            app.MapGet("/api/users/reset-password-redirect", async (
-    IMediator mediator,
-    HttpContext context) =>
-            {
-                // Extract parameters from query string
-                var accessToken = context.Request.Query["access_token"].ToString();
-                var refreshToken = context.Request.Query["refresh_token"].ToString();
-                var expiresAt = context.Request.Query["expires_at"].ToString();
-                var tokenType = context.Request.Query["token_type"].ToString();
+            //        app.MapGet("/api/users/reset-password-redirect", async (
+            //IMediator mediator,
+            //HttpContext context) =>
+            //        {
+            //            // Extract parameters from query string
+            //            var accessToken = context.Request.Query["access_token"].ToString();
+            //            var refreshToken = context.Request.Query["refresh_token"].ToString();
+            //            var expiresAt = context.Request.Query["expires_at"].ToString();
+            //            var tokenType = context.Request.Query["token_type"].ToString();
 
+            //            var result = await mediator.Send(new ResetPasswordRedirectRequest
+            //            {
+            //                AccessToken = accessToken,
+            //                RefreshToken = refreshToken,
+            //                ExpiresAt = expiresAt,
+            //                TokenType = tokenType
+            //            });
+
+            //            return Results.Content(result.HtmlContent, "text/html");
+            //        });
+
+            // Replace your existing endpoint with this in Program.cs
+
+            app.MapGet("/api/users/reset-password-redirect", async (
+                IMediator mediator,
+                HttpContext context) =>
+            {
+                // Log the incoming request
+                Console.WriteLine("🔗 Reset Password Redirect Endpoint Called");
+                Console.WriteLine($"📍 Full URL: {context.Request.GetDisplayUrl()}");
+                Console.WriteLine($"🔍 Query String: {context.Request.QueryString}");
+
+                // Extract token_hash and type from query parameters (Supabase PKCE flow)
+                var tokenHash = context.Request.Query["token_hash"].ToString();
+                var type = context.Request.Query["type"].ToString();
+
+                Console.WriteLine($"🎟️ Token Hash: {tokenHash?.Substring(0, Math.Min(20, tokenHash?.Length ?? 0))}...");
+                Console.WriteLine($"🔖 Type: {type}");
+
+                // Send request to handler
                 var result = await mediator.Send(new ResetPasswordRedirectRequest
                 {
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    ExpiresAt = expiresAt,
-                    TokenType = tokenType
+                    TokenHash = tokenHash,
+                    Type = type
                 });
 
                 return Results.Content(result.HtmlContent, "text/html");
-            });
-
+            })
+            .WithName("ResetPasswordRedirect")
+            .WithTags("Authentication")
+            .Produces<string>(StatusCodes.Status200OK, "text/html");
             group.MapPut("/reset-password", async (ResetPasswordRequest request, IMediator mediator) =>
             {
                 var result = await mediator.Send(request);

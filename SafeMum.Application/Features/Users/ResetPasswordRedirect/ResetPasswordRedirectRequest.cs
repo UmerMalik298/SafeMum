@@ -9,10 +9,8 @@ namespace SafeMum.Application.Features.Users.ResetPasswordRedirect
 {
     public class ResetPasswordRedirectRequest : IRequest<ResetPasswordRedirectResponse>
     {
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public string ExpiresAt { get; set; }
-        public string TokenType { get; set; }
+        public string TokenHash { get; set; }  // Changed from AccessToken
+        public string Type { get; set; }
     }
 
     public class ResetPasswordRedirectResponse
