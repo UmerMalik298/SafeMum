@@ -5,41 +5,76 @@ using System.Text;
 using System.Threading.Tasks;
 using MediatR;
 using SafeMum.Application.Interfaces;
+using SafeMum.Domain.Entities.Users;
 
 namespace SafeMum.Application.Features.Users.ResetPassword
 {
+   
+
     public class ResetPasswordHandler : IRequestHandler<ResetPasswordRequest, ResetPasswordResponse>
     {
         private readonly Supabase.Client _client;
+        private readonly ISupabaseAdminService _adminService;
 
-        public ResetPasswordHandler(ISupabaseClientFactory clientFactory)
+        public ResetPasswordHandler(
+            ISupabaseClientFactory clientFactory,
+            ISupabaseAdminService adminService)
         {
             _client = clientFactory.GetClient();
-            
+            _adminService = adminService;
         }
+
         public async Task<ResetPasswordResponse> Handle(ResetPasswordRequest request, CancellationToken cancellationToken)
         {
-
             try
             {
-                // Validate that we have the access token
-                if (string.IsNullOrEmpty(request.AccessToken))
+                // 1. Validate token
+                var tokenResponse = await _client
+                    .From<PasswordResetToken>()
+                    .Where(x => x.Token == request.AccessToken)
+                    .Where(x => x.Used == false)
+                    .Where(x => x.ExpiresAt > DateTime.UtcNow)
+                    .Single();
+
+                if (tokenResponse == null)
                 {
                     return new ResetPasswordResponse
                     {
                         Success = false,
-                        Message = "Access token is required"
+                        Message = "Invalid or expired reset token"
                     };
                 }
 
-                // Set the session using the tokens from the reset email
-                await _client.Auth.SetSession(request.AccessToken, request.RefreshToken);
+                // 2. Get user by email using admin service
+                var user = await _adminService.GetUserByEmailAsync(tokenResponse.Email);
 
-                // Now update the password
-                await _client.Auth.Update(new Supabase.Gotrue.UserAttributes
+                if (user == null)
                 {
-                    Password = request.NewPassword,
-                });
+                    return new ResetPasswordResponse
+                    {
+                        Success = false,
+                        Message = "User not found"
+                    };
+                }
+
+                // 3. Update password using admin service (service role key)
+                var passwordUpdated = await _adminService.UpdateUserPasswordAsync(user.Id, request.NewPassword);
+
+                if (!passwordUpdated)
+                {
+                    return new ResetPasswordResponse
+                    {
+                        Success = false,
+                        Message = "Failed to update password"
+                    };
+                }
+
+                // 4. Mark token as used
+                await _client
+                    .From<PasswordResetToken>()
+                    .Where(x => x.Token == request.AccessToken)
+                    .Set(x => x.Used, true)
+                    .Update();
 
                 return new ResetPasswordResponse
                 {
@@ -56,6 +91,5 @@ namespace SafeMum.Application.Features.Users.ResetPassword
                 };
             }
         }
-
     }
-    }
+}

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using SafeMum.Application.Interfaces;
+using SafeMum.Domain.Entities.Users;
 using Supabase.Gotrue;
 using System;
 using System.Collections.Generic;
@@ -12,42 +13,75 @@ namespace SafeMum.Application.Features.Users.ForgotPassword
     public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordRequest, ForgotPasswordResponse>
     {
         private readonly Supabase.Client _client;
-        public ForgotPasswordHandler(ISupabaseClientFactory clientFactory)
+        private readonly ISupabaseAdminService _adminService;
+
+        public ForgotPasswordHandler(
+            ISupabaseClientFactory clientFactory,
+            ISupabaseAdminService adminService)
         {
             _client = clientFactory.GetClient();
-            
+            _adminService = adminService;
         }
+
         public async Task<ForgotPasswordResponse> Handle(ForgotPasswordRequest request, CancellationToken cancellationToken)
         {
             try
             {
-                //await _client.Auth.ResetPasswordForEmail(request.Email);
+                // 1. Check if user exists using admin service
+                var user = await _adminService.GetUserByEmailAsync(request.Email);
 
-                var options = new ResetPasswordForEmailOptions(request.Email)
+                if (user == null)
                 {
-                    //RedirectTo = "safemum://reset-password"
-                    RedirectTo = "https://safemum-production.up.railway.app/api/users/reset-password-redirect"
+                    return new ForgotPasswordResponse
+                    {
+                        Success = false,
+                        Message = "User not found"
+                    };
+                }
 
+                // 2. Generate secure token
+                var resetToken = GenerateSecureToken();
+                var expiresAt = DateTime.UtcNow.AddHours(1);
+
+                // 3. Store token in database
+                var passwordResetToken = new PasswordResetToken
+                {
+                    Email = request.Email,
+                    Token = resetToken,
+                    ExpiresAt = expiresAt,
+                    Used = false,
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                await _client.Auth.ResetPasswordForEmail(options);
+                await _client.From<PasswordResetToken>().Insert(passwordResetToken);
+
+                // 4. TODO: Send email with token
+                // await _emailService.SendResetEmail(request.Email, resetToken);
 
                 return new ForgotPasswordResponse
                 {
                     Success = true,
-                    Message = "Password Reset Email has been sent"
+                    Message = $"Password reset token: {resetToken}" // Remove this in production, send via email
                 };
             }
             catch (Exception ex)
             {
-
                 return new ForgotPasswordResponse
                 {
                     Success = false,
-                    Message = "Faild to send reset Email"+ ex.ToString()
+                    Message = $"Failed to send reset email: {ex.Message}"
                 };
             }
-          
+        }
+
+        private string GenerateSecureToken()
+        {
+            var randomBytes = new byte[32];
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            return Convert.ToBase64String(randomBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
         }
     }
 }
