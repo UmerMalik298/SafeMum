@@ -12,9 +12,9 @@ namespace SafeMum.Domain.Entities.Users
     [Table("password_reset_tokens")]
     public class PasswordResetToken : BaseModel
     {
-        [PrimaryKey("id", false)]
-        [Column("id")]
-        public int Id { get; set; }
+        //[PrimaryKey("id", false)]
+        //[Column("id")]
+        //public int Id { get; set; }
 
         [Column("email")]
         public string Email { get; set; }

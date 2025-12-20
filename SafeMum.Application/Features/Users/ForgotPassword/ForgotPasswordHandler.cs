@@ -27,9 +27,8 @@ namespace SafeMum.Application.Features.Users.ForgotPassword
         {
             try
             {
-                // 1. Check if user exists using admin service
+                // 1. Check if user exists
                 var user = await _adminService.GetUserByEmailAsync(request.Email);
-
                 if (user == null)
                 {
                     return new ForgotPasswordResponse
@@ -39,12 +38,12 @@ namespace SafeMum.Application.Features.Users.ForgotPassword
                     };
                 }
 
-                // 2. Generate secure token
+                // 2. Generate token
                 var resetToken = GenerateSecureToken();
                 var expiresAt = DateTime.UtcNow.AddHours(1);
 
-                // 3. Store token in database
-                var passwordResetToken = new PasswordResetToken
+                // 3. Insert using DTO (no Id property)
+                var tokenInsert = new PasswordResetToken
                 {
                     Email = request.Email,
                     Token = resetToken,
@@ -53,15 +52,12 @@ namespace SafeMum.Application.Features.Users.ForgotPassword
                     CreatedAt = DateTime.UtcNow
                 };
 
-                await _client.From<PasswordResetToken>().Insert(passwordResetToken);
-
-                // 4. TODO: Send email with token
-                // await _emailService.SendResetEmail(request.Email, resetToken);
+                await _client.From<PasswordResetToken>().Insert(tokenInsert);
 
                 return new ForgotPasswordResponse
                 {
                     Success = true,
-                    Message = $"Password reset token: {resetToken}" // Remove this in production, send via email
+                    Message = $"Password reset token: {resetToken}"
                 };
             }
             catch (Exception ex)
